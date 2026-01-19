@@ -55,14 +55,24 @@ const DIFFICULTY_INSTRUCTIONS: Record<DifficultyLevel, string> = {
     - Đảm bảo đa dạng độ khó để đánh giá toàn diện`
 };
 
+// Danh sách models theo thứ tự ưu tiên
+const MODELS = ['gemini-3-flash-preview', 'gemini-3-pro-preview', 'gemini-2.5-flash'];
+
+// Lấy API key từ localStorage
+const getApiKey = (): string => {
+    const key = localStorage.getItem('gemini_api_key');
+    if (!key) {
+        throw new Error('API key không tồn tại. Vui lòng cài đặt API key.');
+    }
+    return key;
+};
+
 export const generateQuizData = async (
     topic: string,
     files: File[],
     count: number,
     difficultyLevel: DifficultyLevel = 'hon_hop'
 ): Promise<QuizQuestion[]> => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
     // Schema definition for strict JSON output
     const schema = {
         type: Type.ARRAY,
@@ -108,7 +118,7 @@ export const generateQuizData = async (
     3. Đa dạng câu hỏi: Trắc nghiệm (mcq), Đúng/Sai (tf), Điền số (short).
     4. Giải thích (explain): Ngắn gọn, súc tích, bằng tiếng Việt.
     5. Mức độ đã chọn: ${levelLabel}
-    6. Trường "level" trong mỗi câu hỏi phải ghi rõ mức độ thực tế của câu đó.
+    6. Trường \"level\" trong mỗi câu hỏi phải ghi rõ mức độ thực tế của câu đó.
     7. Chỉ trả về JSON thuần theo schema.
     `;
 
@@ -124,30 +134,47 @@ export const generateQuizData = async (
         parts.push({ text: `Hãy tạo ${count} câu hỏi ${levelLabel} về chủ đề: ${topic}` });
     }
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: { parts },
-        config: {
-            systemInstruction,
-            responseMimeType: "application/json",
-            responseSchema: schema,
-            temperature: 0.4,
-        }
-    });
+    // Retry với 3 models
+    let lastError: Error | null = null;
+    for (const model of MODELS) {
+        try {
+            const apiKey = getApiKey();
+            const ai = new GoogleGenAI({ apiKey });
 
-    const rawData = JSON.parse(response.text || "[]");
+            console.log(`Đang thử với model: ${model}...`);
 
-    // Map data to match types strictly
-    return rawData.map((q: any) => {
-        let cleanCorrect = q.correct;
-        if (q.type === 'tf') {
-            // Map 1 -> true, 0 -> false
-            cleanCorrect = q.correct === 1 || q.correct === true;
+            const response = await ai.models.generateContent({
+                model,
+                contents: { parts },
+                config: {
+                    systemInstruction,
+                    responseMimeType: "application/json",
+                    responseSchema: schema,
+                    temperature: 0.4,
+                }
+            });
+
+            const rawData = JSON.parse(response.text || "[]");
+
+            // Map data to match types strictly
+            return rawData.map((q: any) => {
+                let cleanCorrect = q.correct;
+                if (q.type === 'tf') {
+                    cleanCorrect = q.correct === 1 || q.correct === true;
+                }
+                return {
+                    ...q,
+                    correct: cleanCorrect,
+                    level: q.level || difficultyLevel
+                };
+            });
+        } catch (err: any) {
+            lastError = err;
+            console.error(`Model ${model} thất bại:`, err.message);
+            // Tiếp tục với model tiếp theo
         }
-        return {
-            ...q,
-            correct: cleanCorrect,
-            level: q.level || difficultyLevel
-        };
-    });
+    }
+
+    // Tất cả models đều fail
+    throw new Error(`Không thể tạo câu hỏi. Lỗi cuối: ${lastError?.message || 'Unknown error'}`);
 };

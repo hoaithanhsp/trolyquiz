@@ -138,6 +138,14 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
                 </div>
             </div>
 
+            </div>
+
+            <!-- Timer (if enabled) -->
+            <div id="timer-container" class="glass-panel px-6 py-2 rounded-full flex items-center gap-2 hidden">
+                <i class="fas fa-clock text-teal-50 text-xl"></i>
+                <span id="timer-display" class="text-2xl font-game font-bold text-yellow-300 drop-shadow-md">00:00</span>
+            </div>
+
             <!-- Score -->
             <div class="glass-panel px-6 py-2 rounded-full flex items-center gap-2">
                 <span class="text-teal-50 font-game text-2xl drop-shadow-sm">Điểm:</span>
@@ -220,16 +228,88 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
         // DỮ LIỆU CÂU HỎI (AI SẼ ĐIỀN VÀO ĐÂY)
         const quizData = // {{DATA_PLACEHOLDER}};
 
+        // Timer & Sound Settings (injected by app)
+        const TIMER_SECONDS = {{TIMER_SECONDS}};
+        const ENABLE_SOUND = {{ENABLE_SOUND}};
+
         let currentIdx = 0;
         let score = 0;
+        let timerInterval = null;
+        let timeLeft = TIMER_SECONDS;
         
         // Colors for buttons A, B, C, D
         const btnClasses = ['opt-A', 'opt-B', 'opt-C', 'opt-D'];
         const btnLabels = ['A', 'B', 'C', 'D'];
 
+        // Sound Generator using Web Audio API
+        function playSound(type) {
+            if (!ENABLE_SOUND) return;
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            gainNode.gain.value = 0.1;
+            
+            if (type === 'click') {
+                oscillator.frequency.value = 400;
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.05);
+            } else if (type === 'correct') {
+                oscillator.frequency.value = 800;
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'wrong') {
+                oscillator.frequency.value = 200;
+                oscillator.type = 'sawtooth';
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'win') {
+                [523, 659, 784].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.value = freq;
+                    gain.gain.value = 0.1;
+                    osc.start(audioCtx.currentTime + i * 0.15);
+                    osc.stop(audioCtx.currentTime + i * 0.15 + 0.15);
+                });
+            }
+        }
+
         function init() {
             document.getElementById('total-q').innerText = quizData.length;
+            
+            // Start timer if enabled
+            if (TIMER_SECONDS > 0) {
+                document.getElementById('timer-container').classList.remove('hidden');
+                updateTimerDisplay();
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        showResults();
+                    }
+                }, 1000);
+            }
+            
             renderQuestion();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer-display').innerText = 
+                \`\${String(minutes).padStart(2, '0')}:\${String(seconds).padStart(2, '0')}\`;
+            
+            // Warning when < 10 seconds
+            if (timeLeft <= 10 && timeLeft > 0) {
+                document.getElementById('timer-display').classList.add('text-red-400', 'animate-pulse');
+            }
         }
 
         function renderQuestion() {
