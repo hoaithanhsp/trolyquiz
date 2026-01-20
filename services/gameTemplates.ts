@@ -602,7 +602,7 @@ export const getGameTemplate = (theme: GameTheme): string => {
                 score++;
                 combo++;
                 document.getElementById('score').innerText = score;
-                feedback.innerHTML = \`<i class="fas fa-check-circle"></i> \${THEME_CONFIG.correctText}\`;
+                feedback.innerHTML = \`<i class="fas fa-check-circle"></i> \${THEME_CONFIG.correctText}<br><small class="opacity-80">\${q.explain || ''}</small>\`;
                 feedback.className = "mt-6 p-4 rounded-xl text-center text-xl font-bold bg-green-500/30 text-green-400 border border-green-500";
                 playSound('correct');
                 
@@ -620,9 +620,14 @@ export const getGameTemplate = (theme: GameTheme): string => {
                 document.getElementById('game-screen').classList.add('shake');
                 setTimeout(() => document.getElementById('game-screen').classList.remove('shake'), 500);
                 
-                feedback.innerHTML = \`<i class="fas fa-times-circle"></i> \${THEME_CONFIG.wrongText}<br><small>Đáp án: \${getCorrectAnswer(q)}</small>\`;
+                feedback.innerHTML = \`<i class="fas fa-times-circle"></i> \${THEME_CONFIG.wrongText}<br><small>Đáp án: \${getCorrectAnswer(q)}</small><br><small class="opacity-80">\${q.explain || ''}</small>\`;
                 feedback.className = "mt-6 p-4 rounded-xl text-center text-xl font-bold bg-red-500/30 text-red-400 border border-red-500";
                 playSound('wrong');
+            }
+
+            // Render MathJax cho phần giải thích
+            if (window.MathJax) {
+                window.MathJax.typesetPromise([feedback]).catch(err => {});
             }
 
             document.getElementById('action-buttons').classList.remove('hidden');
