@@ -34,88 +34,200 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
     <style>
         body { 
             font-family: 'Nunito', sans-serif; 
-            /* Gentle Teal Gradient (Xanh ngọc nhẹ nhàng) */
-            background: linear-gradient(135deg, #2dd4bf 0%, #0f766e 100%);
+            /* Vibrant Rainbow Gradient - Màu sắc rực rỡ hơn */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 35%, #f093fb 60%, #f5576c 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
             color: white;
             overflow-x: hidden;
             min-height: 100vh;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
         h1, h2, h3, .font-game {
             font-family: 'Baloo 2', cursive;
         }
         
-        /* Hiệu ứng sấm sét nền (giả lập) - Giảm độ đậm để nhẹ nhàng hơn */
+        /* Text viền đen nổi bật - Dễ đọc trên mọi nền */
+        .text-outline {
+            color: #ffffff;
+            text-shadow: 
+                -2px -2px 0 #000,  
+                2px -2px 0 #000,
+                -2px 2px 0 #000,
+                2px 2px 0 #000,
+                0px 3px 5px rgba(0,0,0,0.5);
+        }
+        
+        /* Hiệu ứng stars nền thay vì lightning */
         .lightning-bg {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L10 40 L35 40 L20 100 L70 30 L45 30 L60 0 Z' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E");
-            background-size: 300px 300px;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, white, transparent),
+                radial-gradient(3px 3px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(2px 2px at 90px 40px, white, transparent),
+                radial-gradient(3px 3px at 160px 120px, rgba(255,255,255,0.9), transparent),
+                radial-gradient(2px 2px at 230px 80px, white, transparent),
+                radial-gradient(4px 4px at 310px 150px, rgba(255,255,255,0.7), transparent);
+            background-size: 400px 200px;
             z-index: -1;
             pointer-events: none;
-            opacity: 0.5; 
+            opacity: 0.6; 
+            animation: twinkle 4s ease-in-out infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.4; }
+            100% { opacity: 0.8; }
         }
 
-        /* Buttons 3D style */
+        /* Buttons 3D style - Nổi khối hơn với shadow đậm */
         .btn-game {
-            transition: all 0.1s;
-            border-bottom: 6px solid;
+            transition: all 0.15s ease;
+            border-bottom: 8px solid;
+            border-right: 4px solid;
             position: relative;
             top: 0;
+            box-shadow: 
+                0 8px 20px rgba(0,0,0,0.4),
+                inset 0 2px 0 rgba(255,255,255,0.3);
+            text-shadow: 
+                -1px -1px 0 rgba(0,0,0,0.5),  
+                1px -1px 0 rgba(0,0,0,0.5),
+                -1px 1px 0 rgba(0,0,0,0.5),
+                1px 1px 0 rgba(0,0,0,0.5);
+        }
+        .btn-game:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 28px rgba(0,0,0,0.5),
+                inset 0 2px 0 rgba(255,255,255,0.4);
         }
         .btn-game:active {
-            top: 4px;
+            top: 6px;
             border-bottom-width: 2px;
+            border-right-width: 2px;
+            box-shadow: 
+                0 2px 8px rgba(0,0,0,0.3),
+                inset 0 2px 0 rgba(255,255,255,0.2);
         }
 
-        /* Màu sắc đáp án */
-        .opt-A { background-color: #22c55e; border-color: #15803d; } /* Green */
-        .opt-B { background-color: #f59e0b; border-color: #b45309; } /* Orange */
-        .opt-C { background-color: #ef4444; border-color: #b91c1c; } /* Red */
-        .opt-D { background-color: #a855f7; border-color: #7e22ce; } /* Purple */
+        /* Màu sắc đáp án - Rực rỡ hơn với gradient */
+        .opt-A { 
+            background: linear-gradient(145deg, #34d399 0%, #10b981 50%, #059669 100%); 
+            border-color: #047857; 
+            border-right-color: #065f46;
+        }
+        .opt-B { 
+            background: linear-gradient(145deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%); 
+            border-color: #b45309; 
+            border-right-color: #92400e;
+        }
+        .opt-C { 
+            background: linear-gradient(145deg, #f87171 0%, #ef4444 50%, #dc2626 100%); 
+            border-color: #b91c1c; 
+            border-right-color: #991b1b;
+        }
+        .opt-D { 
+            background: linear-gradient(145deg, #c084fc 0%, #a855f7 50%, #9333ea 100%); 
+            border-color: #7e22ce; 
+            border-right-color: #6b21a8;
+        }
         
-        .opt-A:hover { background-color: #4ade80; }
-        .opt-B:hover { background-color: #fbbf24; }
-        .opt-C:hover { background-color: #f87171; }
-        .opt-D:hover { background-color: #c084fc; }
+        .opt-A:hover { background: linear-gradient(145deg, #6ee7b7 0%, #34d399 50%, #10b981 100%); }
+        .opt-B:hover { background: linear-gradient(145deg, #fcd34d 0%, #fbbf24 50%, #f59e0b 100%); }
+        .opt-C:hover { background: linear-gradient(145deg, #fca5a5 0%, #f87171 50%, #ef4444 100%); }
+        .opt-D:hover { background: linear-gradient(145deg, #e9d5ff 0%, #c084fc 50%, #a855f7 100%); }
 
-        .correct-glow { box-shadow: 0 0 20px #4ade80; border-color: #ffffff; transform: scale(1.02); z-index: 10; }
+        .correct-glow { 
+            box-shadow: 0 0 30px #4ade80, 0 0 60px #22c55e; 
+            border-color: #ffffff; 
+            transform: scale(1.05); 
+            z-index: 10; 
+        }
         .wrong-shake { animation: shake 0.5s; opacity: 0.6; }
 
         @keyframes shake {
             0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            50% { transform: translateX(5px); }
-            75% { transform: translateX(-5px); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
             100% { transform: translateX(0); }
         }
 
         .glass-panel {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 8px 32px 0 rgba(15, 118, 110, 0.2);
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(16px);
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 
+                0 8px 32px 0 rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
-        .math-display { font-size: 1.25em !important; }
+        /* Chữ câu hỏi to hơn */
+        .math-display { font-size: 1.5em !important; }
+        
+        /* Question text - To và viền đen */
+        .question-text {
+            font-size: 1.8rem !important;
+            line-height: 1.4;
+            text-shadow: 
+                -2px -2px 0 #000,  
+                2px -2px 0 #000,
+                -2px 2px 0 #000,
+                2px 2px 0 #000,
+                0px 4px 8px rgba(0,0,0,0.6);
+        }
+        
+        /* Option text - To và viền đen */
+        .option-text {
+            font-size: 1.4rem !important;
+            font-weight: 700;
+            text-shadow: 
+                -1px -1px 0 rgba(0,0,0,0.8),  
+                1px -1px 0 rgba(0,0,0,0.8),
+                -1px 1px 0 rgba(0,0,0,0.8),
+                1px 1px 0 rgba(0,0,0,0.8);
+        }
+        
+        @media (min-width: 768px) {
+            .question-text { font-size: 2.2rem !important; }
+            .option-text { font-size: 1.6rem !important; }
+        }
         
         /* Gold Text Effect for Result */
         .text-gold {
-            background: linear-gradient(to bottom, #fef08a 0%, #d97706 100%);
+            background: linear-gradient(to bottom, #fef08a 0%, #eab308 50%, #ca8a04 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0px 2px 0px rgba(0,0,0,0.5));
+            filter: drop-shadow(0px 4px 0px rgba(0,0,0,0.7));
         }
         
         /* Confetti */
         .confetti {
             position: absolute;
-            width: 10px; height: 10px;
+            width: 12px; height: 12px;
             background-color: #f00;
             animation: fall linear forwards;
+            border-radius: 2px;
         }
         @keyframes fall {
             to { transform: translateY(100vh) rotate(720deg); }
+        }
+        
+        /* Pulse animation for important elements */
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+            50% { box-shadow: 0 0 40px rgba(255,255,255,0.6); }
         }
     </style>
 </head>
@@ -159,7 +271,7 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
                 <i class="fas fa-lightbulb mr-2"></i> <span id="q-topic">CHỦ ĐỀ</span>
             </div>
 
-            <h2 class="text-2xl md:text-4xl font-bold text-center mt-4 mb-4 leading-tight math-display drop-shadow-sm" id="q-text">
+            <h2 class="question-text text-2xl md:text-4xl font-bold text-center mt-4 mb-4 leading-tight math-display text-white" id="q-text">
                 Đang tải dữ liệu...
             </h2>
         </div>
@@ -331,10 +443,10 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
                     const btnClass = btnClasses[idx % 4];
                     const label = btnLabels[idx % 4];
                     const btn = document.createElement('button');
-                    btn.className = \`btn-game \${btnClass} w-full text-white p-6 rounded-2xl text-xl font-bold text-left flex items-center gap-4 shadow-lg group\`;
+                    btn.className = \`btn-game \${btnClass} w-full text-white p-6 md:p-8 rounded-2xl text-xl font-bold text-left flex items-center gap-4 shadow-lg group\`;
                     btn.innerHTML = \`
-                        <div class="w-12 h-12 rounded-lg bg-black/20 flex items-center justify-center text-2xl font-black shrink-0 group-hover:scale-110 transition-transform">\${label}</div>
-                        <div class="math-opt flex-1">\${opt}</div>
+                        <div class="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-black/30 flex items-center justify-center text-2xl md:text-3xl font-black shrink-0 group-hover:scale-110 transition-transform border-2 border-white/30">\${label}</div>
+                        <div class="option-text math-opt flex-1 text-white">\${opt}</div>
                     \`;
                     btn.onclick = () => handleAnswer(idx, btn, 'mcq');
                     container.appendChild(btn);
@@ -345,7 +457,7 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
                     const btnClass = isTrue ? 'opt-A' : 'opt-C'; // Green for True, Red for False
                     const icon = isTrue ? 'check' : 'times';
                     const btn = document.createElement('button');
-                    btn.className = \`btn-game \${btnClass} w-full text-white p-8 rounded-2xl text-2xl font-bold flex flex-col items-center justify-center gap-2 shadow-lg hover:scale-105 transition-transform\`;
+                    btn.className = \`btn-game \${btnClass} w-full text-white p-10 md:p-12 rounded-2xl text-2xl md:text-3xl font-bold flex flex-col items-center justify-center gap-3 shadow-lg hover:scale-105 transition-transform\`;
                     btn.innerHTML = \`<i class="fas fa-\${icon} text-4xl bg-black/20 p-4 rounded-full mb-2"></i> <span>\${opt}</span>\`;
                     btn.onclick = () => handleAnswer(isTrue, btn, 'tf');
                     container.appendChild(btn);
