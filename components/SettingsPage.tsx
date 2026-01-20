@@ -21,9 +21,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
     };
 
     const availableModels = [
-        { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash (Khuyến nghị)', desc: 'Nhanh, hiệu quả' },
-        { id: 'gemini-2.0-flash-thinking-exp', name: 'Gemini 2.0 Flash Thinking', desc: 'Tư duy sâu hơn' },
-        { id: 'gemini-exp-1206', name: 'Gemini Experimental 1206', desc: 'Phiên bản thử nghiệm' }
+        { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', desc: 'Model mặc định - Nhanh, hiệu quả', isDefault: true },
+        { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro Preview', desc: 'Model dự phòng - Chất lượng cao', isDefault: false },
+        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Model dự phòng #2 - Ổn định', isDefault: false }
     ];
 
     return (
@@ -67,17 +67,29 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
                                 </button>
                             </div>
                         </div>
-                        <div className="bg-blue-50 p-4 rounded-xl space-y-2">
-                            <p className="text-sm font-bold text-blue-900 mb-2">📖 Hướng dẫn lấy API Key:</p>
-                            <a
-                                href="https://aistudio.google.com/apikey"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-semibold"
-                            >
-                                <ExternalLink className="w-4 h-4" />
-                                Lấy API key tại đây
-                            </a>
+                        <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-3">
+                            <p className="text-sm font-bold text-amber-900">📖 Hướng dẫn lấy API Key:</p>
+                            <div className="space-y-2">
+                                <a
+                                    href="https://aistudio.google.com/apikey"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-semibold bg-blue-50 px-3 py-2 rounded-lg"
+                                >
+                                    <ExternalLink className="w-4 h-4" />
+                                    Bước 1: Lấy API key tại Google AI Studio
+                                </a>
+                                <a
+                                    href="https://tinyurl.com/hdsdpmTHT"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 text-sm font-semibold bg-green-50 px-3 py-2 rounded-lg"
+                                >
+                                    <ExternalLink className="w-4 h-4" />
+                                    📺 Xem video hướng dẫn chi tiết
+                                </a>
+                            </div>
+                            <p className="text-xs text-amber-700">⚠️ Nếu hết quota, hãy tạo API key mới hoặc đợi quota được reset</p>
                         </div>
                     </div>
                 </div>
@@ -100,9 +112,9 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
                             {availableModels.map((model) => (
                                 <label
                                     key={model.id}
-                                    className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all ${localSettings.defaultModel === model.id
-                                            ? 'border-purple-500 bg-purple-50'
-                                            : 'border-slate-200 hover:border-purple-200 bg-white'
+                                    className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all relative ${localSettings.defaultModel === model.id
+                                        ? 'border-purple-500 bg-purple-50'
+                                        : 'border-slate-200 hover:border-purple-200 bg-white'
                                         }`}
                                 >
                                     <input
@@ -114,11 +126,21 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
                                         className="mt-1 accent-purple-600"
                                     />
                                     <div className="flex-1">
-                                        <div className="font-bold text-slate-900">{model.name}</div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-slate-900">{model.name}</span>
+                                            {model.isDefault && (
+                                                <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">DEFAULT</span>
+                                            )}
+                                        </div>
                                         <div className="text-sm text-slate-500">{model.desc}</div>
                                     </div>
                                 </label>
                             ))}
+                            <div className="bg-slate-50 p-3 rounded-lg mt-2">
+                                <p className="text-xs text-slate-600">
+                                    💡 <strong>Cơ chế Fallback:</strong> Nếu model hiện tại gặp lỗi hoặc hết quota, hệ thống sẽ tự động chuyển sang model dự phòng theo thứ tự trên.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -181,8 +203,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
                                 <button
                                     onClick={() => setLocalSettings({ ...localSettings, defaultSound: true })}
                                     className={`flex-1 py-3 rounded-xl font-bold transition-all ${localSettings.defaultSound
-                                            ? 'bg-teal-100 text-teal-700 border-2 border-teal-300'
-                                            : 'bg-slate-100 text-slate-500 border-2 border-slate-300'
+                                        ? 'bg-teal-100 text-teal-700 border-2 border-teal-300'
+                                        : 'bg-slate-100 text-slate-500 border-2 border-slate-300'
                                         }`}
                                 >
                                     🔊 Bật
@@ -190,8 +212,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
                                 <button
                                     onClick={() => setLocalSettings({ ...localSettings, defaultSound: false })}
                                     className={`flex-1 py-3 rounded-xl font-bold transition-all ${!localSettings.defaultSound
-                                            ? 'bg-slate-200 text-slate-700 border-2 border-slate-400'
-                                            : 'bg-slate-100 text-slate-500 border-2 border-slate-300'
+                                        ? 'bg-slate-200 text-slate-700 border-2 border-slate-400'
+                                        : 'bg-slate-100 text-slate-500 border-2 border-slate-300'
                                         }`}
                                 >
                                     🔇 Tắt

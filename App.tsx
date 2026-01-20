@@ -57,6 +57,7 @@ const App: React.FC = () => {
 
     // API Key & Settings
     const [apiKey, setApiKey] = useState('');
+    const [showApiKeyModal, setShowApiKeyModal] = useState(false);
     const [appSettings, setAppSettings] = useState<AppSettings>(storageService.getSettings());
 
     // Analytics
@@ -77,6 +78,8 @@ const App: React.FC = () => {
         const savedKey = localStorage.getItem('gemini_api_key');
         if (savedKey) {
             setApiKey(savedKey);
+        } else {
+            setShowApiKeyModal(true); // Hiển thị modal bắt buộc nhập key
         }
     }, []);
 
@@ -315,6 +318,28 @@ const App: React.FC = () => {
                                     Chuyển đổi tài liệu bài giảng thành trò chơi trắc nghiệm HTML tương tác ngay lập tức.
                                 </p>
                             </div>
+                            {/* API Key Settings Button */}
+                            <button
+                                onClick={() => setShowApiKeyModal(true)}
+                                className="flex flex-col items-end gap-1"
+                            >
+                                <div className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all shadow-sm">
+                                    <SettingsIcon className="w-5 h-5 text-blue-600" />
+                                    <span className="font-bold text-slate-700">API Key</span>
+                                    {apiKey && (
+                                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    )}
+                                </div>
+                                <a
+                                    href="https://aistudio.google.com/apikey"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-xs text-red-500 hover:text-red-600 hover:underline font-semibold"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    Lấy API key để sử dụng app →
+                                </a>
+                            </button>
                         </div>
 
                         {/* Generator Section (Split View) */}
@@ -617,6 +642,86 @@ const App: React.FC = () => {
                                     className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30"
                                 >
                                     Lưu ngay
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* API Key Modal */}
+            {showApiKeyModal && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-5 text-white">
+                            <h3 className="text-2xl font-bold">🔑 Cài Đặt API Key</h3>
+                            <p className="text-blue-100 text-sm mt-1">Nhập Google Gemini API Key để sử dụng ứng dụng</p>
+                        </div>
+
+                        <div className="p-6 space-y-5">
+                            {/* Input */}
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">API Key của bạn</label>
+                                <input
+                                    type="password"
+                                    value={apiKey}
+                                    onChange={(e) => setApiKey(e.target.value)}
+                                    placeholder="Nhập API key tại đây..."
+                                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all font-mono text-sm"
+                                    autoFocus
+                                />
+                            </div>
+
+                            {/* Instructions */}
+                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl space-y-3">
+                                <p className="text-sm font-bold text-amber-900">📖 Hướng dẫn lấy API Key:</p>
+                                <div className="space-y-2">
+                                    <a
+                                        href="https://aistudio.google.com/apikey"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-semibold bg-blue-50 px-3 py-2 rounded-lg"
+                                    >
+                                        <span className="text-lg">1️⃣</span>
+                                        Truy cập Google AI Studio để lấy API Key
+                                    </a>
+                                    <a
+                                        href="https://tinyurl.com/hdsdpmTHT"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-2 text-green-600 hover:text-green-700 text-sm font-semibold bg-green-50 px-3 py-2 rounded-lg"
+                                    >
+                                        <span className="text-lg">📺</span>
+                                        Xem video hướng dẫn chi tiết
+                                    </a>
+                                </div>
+                                <p className="text-xs text-amber-700">⚠️ API Key miễn phí, nhưng có giới hạn quota (hết quota sẽ tự động chuyển model dự phòng)</p>
+                            </div>
+
+                            {/* Buttons */}
+                            <div className="flex gap-3 pt-2">
+                                {apiKey && (
+                                    <button
+                                        onClick={() => setShowApiKeyModal(false)}
+                                        className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all"
+                                    >
+                                        Hủy
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        if (apiKey.trim()) {
+                                            localStorage.setItem('gemini_api_key', apiKey.trim());
+                                            setShowApiKeyModal(false);
+                                            alert('✅ Đã lưu API Key thành công!');
+                                        } else {
+                                            alert('❌ Vui lòng nhập API Key!');
+                                        }
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30"
+                                >
+                                    Lưu API Key
                                 </button>
                             </div>
                         </div>
