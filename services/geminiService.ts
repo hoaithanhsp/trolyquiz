@@ -139,66 +139,54 @@ export const generateQuizData = async (
         parts.push({ text: `Hãy tạo ${count} câu hỏi ${levelLabel} về chủ đề: ${topic}` });
     }
 
-    // Retry với 3 models
-    let lastError: Error | null = null;
-    for (const model of MODELS) {
-        try {
-            const apiKey = getApiKey();
-            const ai = new GoogleGenAI({ apiKey });
+    // Gọi API trực tiếp với 1 model (giống app cũ - nhanh hơn)
+    const apiKey = getApiKey();
+    const ai = new GoogleGenAI({ apiKey });
 
-            console.log(`Đang thử với model: ${model}...`);
+    console.log('Đang tạo câu hỏi với gemini-3-flash-preview...');
 
-            const response = await ai.models.generateContent({
-                model,
-                contents: { parts },
-                config: {
-                    systemInstruction,
-                    responseMimeType: "application/json",
-                    responseSchema: schema,
-                    temperature: 0.4,
-                }
-            });
-
-            const rawData = JSON.parse(response.text || "[]");
-
-            // Map data to match types strictly
-            let questions = rawData.map((q: any) => {
-                let cleanCorrect = q.correct;
-                if (q.type === 'tf') {
-                    cleanCorrect = q.correct === 1 || q.correct === true;
-                }
-                return {
-                    ...q,
-                    correct: cleanCorrect,
-                    level: q.level || difficultyLevel
-                };
-            });
-
-            // Nếu là mức độ hỗn hợp, sắp xếp theo thứ tự tăng dần
-            if (difficultyLevel === 'hon_hop') {
-                const levelOrder: Record<DifficultyLevel, number> = {
-                    nhan_biet: 1,
-                    thong_hieu: 2,
-                    van_dung: 3,
-                    van_dung_cao: 4,
-                    hon_hop: 0 // không dùng trong sort
-                };
-
-                questions.sort((a, b) => {
-                    const orderA = levelOrder[a.level as DifficultyLevel] || 0;
-                    const orderB = levelOrder[b.level as DifficultyLevel] || 0;
-                    return orderA - orderB;
-                });
-            }
-
-            return questions;
-        } catch (err: any) {
-            lastError = err;
-            console.error(`Model ${model} thất bại:`, err.message);
-            // Tiếp tục với model tiếp theo
+    const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: { parts },
+        config: {
+            systemInstruction,
+            responseMimeType: "application/json",
+            responseSchema: schema,
+            temperature: 0.4,
         }
+    });
+
+    const rawData = JSON.parse(response.text || "[]");
+
+    // Map data to match types strictly
+    let questions = rawData.map((q: any) => {
+        let cleanCorrect = q.correct;
+        if (q.type === 'tf') {
+            cleanCorrect = q.correct === 1 || q.correct === true;
+        }
+        return {
+            ...q,
+            correct: cleanCorrect,
+            level: q.level || difficultyLevel
+        };
+    });
+
+    // Nếu là mức độ hỗn hợp, sắp xếp theo thứ tự tăng dần
+    if (difficultyLevel === 'hon_hop') {
+        const levelOrder: Record<DifficultyLevel, number> = {
+            nhan_biet: 1,
+            thong_hieu: 2,
+            van_dung: 3,
+            van_dung_cao: 4,
+            hon_hop: 0 // không dùng trong sort
+        };
+
+        questions.sort((a, b) => {
+            const orderA = levelOrder[a.level as DifficultyLevel] || 0;
+            const orderB = levelOrder[b.level as DifficultyLevel] || 0;
+            return orderA - orderB;
+        });
     }
 
-    // Tất cả models đều fail
-    throw new Error(`Không thể tạo câu hỏi. Lỗi cuối: ${lastError?.message || 'Unknown error'}`);
+    return questions;
 };
