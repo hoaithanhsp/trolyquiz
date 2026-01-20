@@ -61,7 +61,7 @@ const DIFFICULTY_INSTRUCTIONS: Record<DifficultyLevel, string> = {
 };
 
 // Danh sách models theo thứ tự ưu tiên (tên chính xác từ Google Gemini API)
-const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+const MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash-latest', 'gemini-pro'];
 
 // Lấy API key từ localStorage
 const getApiKey = (): string => {
