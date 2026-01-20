@@ -61,7 +61,7 @@ const DIFFICULTY_INSTRUCTIONS: Record<DifficultyLevel, string> = {
 };
 
 // Danh sách models theo thứ tự ưu tiên
-const MODELS = ['gemini-1.5-pro', 'gemini-1.5-flash-8b', 'gemini-1.0-pro'];
+const MODELS = ['gemini-3-flash-preview'];
 
 // Lấy API key từ localStorage
 const getApiKey = (): string => {
