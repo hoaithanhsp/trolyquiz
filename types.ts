@@ -1,6 +1,18 @@
 // Mức độ câu hỏi theo Bloom's Taxonomy
 export type DifficultyLevel = 'nhan_biet' | 'thong_hieu' | 'van_dung' | 'van_dung_cao' | 'hon_hop';
 
+// Loại giao diện game
+export type GameTheme = 'classic' | 'space' | 'quiz_show' | 'rpg' | 'racing' | 'treasure';
+
+export const GAME_THEME_LABELS: Record<GameTheme, string> = {
+  classic: '🎯 Cơ Bản - Game Show',
+  space: '🚀 Space Defender - Bắn Phi Thuyền',
+  quiz_show: '🏆 Quiz Show - Ai Là Triệu Phú',
+  rpg: '⚔️ RPG Adventure - Dũng Sĩ Diệt Rồng',
+  racing: '🏎️ Speed Racer - Đua Xe Tốc Độ',
+  treasure: '💎 Treasure Hunt - Săn Kho Báu'
+};
+
 export const DIFFICULTY_LABELS: Record<DifficultyLevel, string> = {
   nhan_biet: 'Nhận biết',
   thong_hieu: 'Thông hiểu',

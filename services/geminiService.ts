@@ -52,6 +52,11 @@ const DIFFICULTY_INSTRUCTIONS: Record<DifficultyLevel, string> = {
     MỨC ĐỘ: HỖN HỢP (Mixed)
     - Kết hợp tất cả các mức độ: Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao
     - Phân bố: 20% Nhận biết, 30% Thông hiểu, 30% Vận dụng, 20% Vận dụng cao
+    - QUAN TRỌNG: Tạo câu hỏi theo THỨ TỰ TĂNG DẦN về mức độ:
+      + Bắt đầu với các câu NHẬN BIẾT (nhan_biet)
+      + Tiếp theo là THÔNG HIỂU (thong_hieu)
+      + Sau đó là VẬN DỤNG (van_dung)
+      + Cuối cùng là VẬN DỤNG CAO (van_dung_cao)
     - Đảm bảo đa dạng độ khó để đánh giá toàn diện`
 };
 
@@ -157,7 +162,7 @@ export const generateQuizData = async (
             const rawData = JSON.parse(response.text || "[]");
 
             // Map data to match types strictly
-            return rawData.map((q: any) => {
+            let questions = rawData.map((q: any) => {
                 let cleanCorrect = q.correct;
                 if (q.type === 'tf') {
                     cleanCorrect = q.correct === 1 || q.correct === true;
@@ -168,6 +173,25 @@ export const generateQuizData = async (
                     level: q.level || difficultyLevel
                 };
             });
+
+            // Nếu là mức độ hỗn hợp, sắp xếp theo thứ tự tăng dần
+            if (difficultyLevel === 'hon_hop') {
+                const levelOrder: Record<DifficultyLevel, number> = {
+                    nhan_biet: 1,
+                    thong_hieu: 2,
+                    van_dung: 3,
+                    van_dung_cao: 4,
+                    hon_hop: 0 // không dùng trong sort
+                };
+
+                questions.sort((a, b) => {
+                    const orderA = levelOrder[a.level as DifficultyLevel] || 0;
+                    const orderB = levelOrder[b.level as DifficultyLevel] || 0;
+                    return orderA - orderB;
+                });
+            }
+
+            return questions;
         } catch (err: any) {
             lastError = err;
             console.error(`Model ${model} thất bại:`, err.message);

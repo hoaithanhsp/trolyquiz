@@ -17,11 +17,13 @@ import {
     VolumeX,
     BookOpen,
     X,
-    Save
+    Save,
+    Gamepad2
 } from 'lucide-react';
 import { generateQuizData } from './services/geminiService';
-import { QuizQuestion, GenerationStatus, DifficultyLevel, DIFFICULTY_LABELS, SavedQuiz, PageType, AppSettings, AnalyticsData } from './types';
+import { QuizQuestion, GenerationStatus, DifficultyLevel, DIFFICULTY_LABELS, SavedQuiz, PageType, AppSettings, AnalyticsData, GameTheme, GAME_THEME_LABELS } from './types';
 import { HTML_TEMPLATE, EXPORT_FILENAME } from './constants';
+import { getGameTemplate } from './services/gameTemplates';
 import QuizPreview from './components/QuizPreview';
 import LibraryPage from './components/LibraryPage';
 import ReportsPage from './components/ReportsPage';
@@ -46,6 +48,7 @@ const App: React.FC = () => {
     const [difficultyLevel, setDifficultyLevel] = useState<DifficultyLevel>('hon_hop');
     const [timerMinutes, setTimerMinutes] = useState(0);
     const [enableSound, setEnableSound] = useState(true);
+    const [gameTheme, setGameTheme] = useState<GameTheme>('classic');
 
     // Library & History
     const [savedQuizzes, setSavedQuizzes] = useState<SavedQuiz[]>([]);
@@ -137,15 +140,28 @@ const App: React.FC = () => {
 
     const handleDownload = () => {
         const jsonString = JSON.stringify(questions);
-        let finalHtml = HTML_TEMPLATE
-            .replace('// {{DATA_PLACEHOLDER}}', jsonString)
-            .replace('{{TIMER_SECONDS}}', String(timerMinutes * 60))
-            .replace('{{ENABLE_SOUND}}', String(enableSound));
+
+        // Chọn template dựa trên gameTheme
+        let finalHtml: string;
+        if (gameTheme === 'classic') {
+            // Sử dụng template cơ bản hiện tại
+            finalHtml = HTML_TEMPLATE
+                .replace('// {{DATA_PLACEHOLDER}}', jsonString)
+                .replace('{{TIMER_SECONDS}}', String(timerMinutes * 60))
+                .replace('{{ENABLE_SOUND}}', String(enableSound));
+        } else {
+            // Sử dụng game template mới
+            finalHtml = getGameTemplate(gameTheme)
+                .replace('// {{DATA_PLACEHOLDER}}', jsonString)
+                .replace('{{TIMER_SECONDS}}', String(timerMinutes * 60))
+                .replace('{{ENABLE_SOUND}}', String(enableSound));
+        }
+
         const blob = new Blob([finalHtml], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = EXPORT_FILENAME;
+        a.download = `quiz-${gameTheme}-${Date.now()}.html`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -191,8 +207,8 @@ const App: React.FC = () => {
                         <button
                             onClick={() => setCurrentPage('create')}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold transition-all ${currentPage === 'create'
-                                    ? 'bg-primary/10 text-primary border-l-4 border-primary'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
+                                ? 'bg-primary/10 text-primary border-l-4 border-primary'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
                                 }`}
                         >
                             <PlusCircle size={20} />
@@ -201,8 +217,8 @@ const App: React.FC = () => {
                         <button
                             onClick={() => setCurrentPage('library')}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold transition-all ${currentPage === 'library'
-                                    ? 'bg-primary/10 text-primary border-l-4 border-primary'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
+                                ? 'bg-primary/10 text-primary border-l-4 border-primary'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
                                 }`}
                         >
                             <Library size={20} />
@@ -211,8 +227,8 @@ const App: React.FC = () => {
                         <button
                             onClick={() => setCurrentPage('reports')}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold transition-all ${currentPage === 'reports'
-                                    ? 'bg-primary/10 text-primary border-l-4 border-primary'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
+                                ? 'bg-primary/10 text-primary border-l-4 border-primary'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
                                 }`}
                         >
                             <BarChart3 size={20} />
@@ -222,8 +238,8 @@ const App: React.FC = () => {
                         <button
                             onClick={() => setCurrentPage('settings')}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold transition-all ${currentPage === 'settings'
-                                    ? 'bg-primary/10 text-primary border-l-4 border-primary'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
+                                ? 'bg-primary/10 text-primary border-l-4 border-primary'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
                                 }`}
                         >
                             <SettingsIcon size={20} />
@@ -232,8 +248,8 @@ const App: React.FC = () => {
                         <button
                             onClick={() => setCurrentPage('support')}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold transition-all ${currentPage === 'support'
-                                    ? 'bg-primary/10 text-primary border-l-4 border-primary'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
+                                ? 'bg-primary/10 text-primary border-l-4 border-primary'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-primary border-l-4 border-transparent'
                                 }`}
                         >
                             <LifeBuoy size={20} />
@@ -395,6 +411,27 @@ const App: React.FC = () => {
                                                     <option value="van_dung_cao">📕 Vận dụng cao - Phân tích phức tạp</option>
                                                     <option value="hon_hop">🌈 Hỗn hợp - Kết hợp tất cả</option>
                                                 </select>
+                                            </div>
+
+                                            {/* Giao diện Game */}
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                                    <Gamepad2 className="w-3 h-3 inline mr-1" />
+                                                    Giao diện Game
+                                                </label>
+                                                <select
+                                                    value={gameTheme}
+                                                    onChange={(e) => setGameTheme(e.target.value as GameTheme)}
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none font-sans"
+                                                >
+                                                    <option value="classic">🎯 Cơ Bản - Game Show</option>
+                                                    <option value="space">🚀 Space Defender - Bắn Phi Thuyền</option>
+                                                    <option value="quiz_show">🏆 Quiz Show - Ai Là Triệu Phú</option>
+                                                    <option value="rpg">⚔️ RPG Adventure - Dũng Sĩ Diệt Rồng</option>
+                                                    <option value="racing">🏎️ Speed Racer - Đua Xe Tốc Độ</option>
+                                                    <option value="treasure">💎 Treasure Hunt - Săn Kho Báu</option>
+                                                </select>
+                                                <p className="text-xs text-slate-400 mt-1">Chọn giao diện để xuất file HTML</p>
                                             </div>
 
                                             {/* Timer và Sound settings */}
