@@ -462,7 +462,7 @@ export const getGameTemplate = (theme: GameTheme): string => {
 
     <script>
         // QUIZ DATA (injected by app)
-        const quizData = // {{DATA_PLACEHOLDER}};
+        const quizData = {{DATA_PLACEHOLDER}};
         
         // Settings
         const TIMER_SECONDS = {{TIMER_SECONDS}};
