@@ -691,7 +691,13 @@ export const getGameTemplate = (theme: GameTheme): string => {
             }
         }
 
-        init();
+        // Kiểm tra dữ liệu trước khi init
+        if (quizData && quizData.length > 0) {
+            init();
+        } else {
+            console.error('Không có dữ liệu câu hỏi!');
+            document.getElementById('q-text').innerText = 'Lỗi: Không tải được dữ liệu câu hỏi. Vui lòng thử lại.';
+        }
     </script>
 </body>
 </html>`;
