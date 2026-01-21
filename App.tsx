@@ -315,7 +315,7 @@ const App: React.FC = () => {
                             <div className="max-w-2xl">
                                 <h2 className="text-4xl font-black tracking-tight text-slate-900 mb-2">Xin chào, Thầy/Cô</h2>
                                 <p className="text-lg text-slate-500 leading-relaxed font-sans">
-                                    Chuyển đổi tài liệu bài giảng thành trò chơi trắc nghiệm HTML tương tác ngay lập tức.
+                                    Chuyển đổi tài liệu bài giảng thành trò chơi trắc nghiệm HTML tương tác ngay lập tức, phát triển bởi thầy Trần Hoài Thanh.
                                 </p>
                             </div>
                             {/* API Key Settings Button */}
