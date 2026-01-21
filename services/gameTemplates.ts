@@ -57,6 +57,13 @@ const THEME_CSS: Record<GameTheme, string> = {
             animation: twinkle 3s ease-in-out infinite;
         }
         @keyframes twinkle { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
+        /* Feedback area - màu chữ đen dễ đọc */
+        #feedback-area {
+            color: #000000 !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-color: #00ffcc !important;
+        }
+        #feedback-area * { color: #000000 !important; }
     `,
     quiz_show: `
         /* Theme Quiz Show - Ai Là Triệu Phú */
