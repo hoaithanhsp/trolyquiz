@@ -150,13 +150,13 @@ const App: React.FC = () => {
         if (gameTheme === 'classic') {
             // Sử dụng template cơ bản hiện tại
             finalHtml = HTML_TEMPLATE
-                .replace('// {{DATA_PLACEHOLDER}}', jsonString)
+                .replace('{{DATA_PLACEHOLDER}}', jsonString)
                 .replace('{{TIMER_SECONDS}}', String(timerMinutes * 60))
                 .replace('{{ENABLE_SOUND}}', String(enableSound));
         } else {
             // Sử dụng game template mới
             finalHtml = getGameTemplate(gameTheme)
-                .replace('// {{DATA_PLACEHOLDER}}', jsonString)
+                .replace('{{DATA_PLACEHOLDER}}', jsonString)
                 .replace('{{TIMER_SECONDS}}', String(timerMinutes * 60))
                 .replace('{{ENABLE_SOUND}}', String(enableSound));
         }
