@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { QuizQuestion, DifficultyLevel, DIFFICULTY_LABELS } from '../types';
+import { QuizQuestion, DifficultyLevel, DIFFICULTY_LABELS, SourceMode } from '../types';
 
 const fileToPart = (file: File): Promise<any> => {
     return new Promise((resolve, reject) => {
@@ -121,7 +121,8 @@ export const generateQuizData = async (
     topic: string,
     files: File[],
     count: number,
-    difficultyLevel: DifficultyLevel = 'hon_hop'
+    difficultyLevel: DifficultyLevel = 'hon_hop',
+    sourceMode: SourceMode = 'creative'
 ): Promise<QuizQuestion[]> => {
     // Schema definition for strict JSON output
     const schema = {
@@ -156,11 +157,32 @@ export const generateQuizData = async (
     const difficultyInstruction = DIFFICULTY_INSTRUCTIONS[difficultyLevel];
     const levelLabel = DIFFICULTY_LABELS[difficultyLevel];
 
+    // Instruction dựa trên sourceMode
+    const sourceModeInstruction = sourceMode === 'strict'
+        ? `
+    CHẾ ĐỘ: NGHIÊM NGẶT (Strict Mode)
+    - BẮT BUỘC lấy CHÍNH XÁC câu hỏi, bài tập từ tài liệu được cung cấp.
+    - KHÔNG ĐƯỢC tự ý thay đổi số liệu, bối cảnh, hoặc nội dung câu hỏi.
+    - Giữ nguyên văn câu hỏi gốc từ tài liệu.
+    - Chỉ format lại cho phù hợp với dạng trắc nghiệm/đúng sai/điền số.
+    - Nếu tài liệu có sẵn đáp án, sử dụng đáp án đó.
+    `
+        : `
+    CHẾ ĐỘ: SÁNG TẠO (Creative Mode)  
+    - Có thể THAM KHẢO tài liệu như nguồn kiến thức cơ sở.
+    - ĐƯỢC PHÉP thay đổi bối cảnh, số liệu, tình huống để tạo câu hỏi mới.
+    - Khuyến khích sáng tạo các dạng câu hỏi đa dạng, thú vị.
+    - Đảm bảo nội dung vẫn liên quan đến kiến thức trong tài liệu.
+    - Có thể thêm các tình huống thực tế, ví dụ minh họa mới.
+    `;
+
     const systemInstruction = `
     Bạn là Trợ lý Soạn Bài Giảng AI chuyên nghiệp.
     Nhiệm vụ: Tạo ${count} câu hỏi kiểm tra bài cũ bằng TIẾNG VIỆT dựa trên tài liệu cung cấp.
     
     ${difficultyInstruction}
+    
+    ${sourceModeInstruction}
     
     Yêu cầu quan trọng:
     1. Ngôn ngữ: 100% Tiếng Việt.
