@@ -40,6 +40,7 @@ const THEME_CSS: Record<GameTheme, string> = {
             background: linear-gradient(145deg, #2d1b69 0%, #11998e 100%);
             border-color: #00ffcc;
             font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
+            color: #000000;
         }
         .btn-game:hover { box-shadow: 0 0 30px #00ffcc; }
         /* Stars animation */
