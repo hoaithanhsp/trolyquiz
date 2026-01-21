@@ -30,10 +30,10 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { 
-            font-family: 'Nunito', sans-serif; 
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif; 
             /* Vibrant Rainbow Gradient - Màu sắc rực rỡ hơn */
             background: linear-gradient(135deg, #667eea 0%, #764ba2 35%, #f093fb 60%, #f5576c 100%);
             background-size: 400% 400%;
