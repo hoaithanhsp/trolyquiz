@@ -484,11 +484,12 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
 
         // Hàm parse phân số và số thông thường
         function parseFraction(str) {
-            if (!str || str.trim() === '') return NaN;
-            str = str.trim().replace(/\s+/g, '');
+            if (!str) return NaN;
+            str = String(str).trim();
+            if (str === '') return NaN;
             
             // Xử lý phân số: 1/2, -3/5, 2/3...
-            if (str.includes('/')) {
+            if (str.indexOf('/') !== -1) {
                 const parts = str.split('/');
                 if (parts.length === 2) {
                     const numerator = parseFloat(parts[0]);
