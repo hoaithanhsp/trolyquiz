@@ -512,7 +512,7 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
             const userValue = parseFraction(userInput);
             
             if (isNaN(userValue)) {
-                alert('Vui lòng nhập số hợp lệ!\nVí dụ: 5, 1/2, -3/5, 0.25');
+                alert('Vui lòng nhập số hợp lệ!\\\\nVí dụ: 5, 1/2, -3/5, 0.25');
                 return;
             }
             
