@@ -339,7 +339,7 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
 
     <script>
         // DỮ LIỆU CÂU HỎI (AI SẼ ĐIỀN VÀO ĐÂY)
-        let quizData = // {{DATA_PLACEHOLDER}};
+        let quizData = {{DATA_PLACEHOLDER}};
 
         // Timer & Sound Settings (injected by app)
         const TIMER_SECONDS = {{TIMER_SECONDS}};
