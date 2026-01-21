@@ -21,7 +21,7 @@ import {
     Gamepad2
 } from 'lucide-react';
 import { generateQuizData } from './services/geminiService';
-import { QuizQuestion, GenerationStatus, DifficultyLevel, DIFFICULTY_LABELS, SavedQuiz, PageType, AppSettings, AnalyticsData, GameTheme, GAME_THEME_LABELS } from './types';
+import { QuizQuestion, GenerationStatus, DifficultyLevel, DIFFICULTY_LABELS, SavedQuiz, PageType, AppSettings, AnalyticsData, GameTheme, GAME_THEME_LABELS, SourceMode, SOURCE_MODE_LABELS } from './types';
 import { HTML_TEMPLATE, EXPORT_FILENAME } from './constants';
 import { getGameTemplate } from './services/gameTemplates';
 import QuizPreview from './components/QuizPreview';
@@ -49,6 +49,7 @@ const App: React.FC = () => {
     const [timerMinutes, setTimerMinutes] = useState(0);
     const [enableSound, setEnableSound] = useState(true);
     const [gameTheme, setGameTheme] = useState<GameTheme>('classic');
+    const [sourceMode, setSourceMode] = useState<SourceMode>('creative'); // Chế độ lấy câu hỏi
 
     // Library & History
     const [savedQuizzes, setSavedQuizzes] = useState<SavedQuiz[]>([]);
@@ -112,7 +113,7 @@ const App: React.FC = () => {
         setQuestions([]);
 
         try {
-            const data = await generateQuizData(topic, files, questionCount, difficultyLevel);
+            const data = await generateQuizData(topic, files, questionCount, difficultyLevel, sourceMode);
             setQuestions(data);
             setStatus('success');
 
@@ -315,7 +316,7 @@ const App: React.FC = () => {
                             <div className="max-w-2xl">
                                 <h2 className="text-4xl font-black tracking-tight text-slate-900 mb-2">Xin chào, Thầy/Cô</h2>
                                 <p className="text-lg text-slate-500 leading-relaxed font-sans">
-                                    Chuyển đổi tài liệu bài giảng thành trò chơi trắc nghiệm HTML tương tác ngay lập tức, phát triển bởi thầy Trần Hoài Thanh.
+                                    Chuyển đổi tài liệu bài giảng thành trò chơi trắc nghiệm HTML tương tác ngay lập tức.
                                 </p>
                             </div>
                             {/* API Key Settings Button */}
@@ -420,6 +421,47 @@ const App: React.FC = () => {
                                                     <p className="text-sm font-bold text-slate-600 mb-1">Nhấn để tải tài liệu lên</p>
                                                     <p className="text-xs text-slate-400">PDF, TXT, Ảnh (Tối đa 10MB)</p>
                                                 </div>
+
+                                                {/* Chế độ lấy câu hỏi - chỉ hiển thị khi có file */}
+                                                {files.length > 0 && (
+                                                    <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Chế độ lấy câu hỏi</p>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSourceMode('strict')}
+                                                                className={`p-3 rounded-lg border-2 transition-all text-left ${sourceMode === 'strict'
+                                                                        ? 'border-blue-500 bg-blue-50 shadow-md'
+                                                                        : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50/50'
+                                                                    }`}
+                                                            >
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <span className="text-lg">📋</span>
+                                                                    <span className={`text-sm font-bold ${sourceMode === 'strict' ? 'text-blue-700' : 'text-slate-700'}`}>
+                                                                        Nghiêm ngặt
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-xs text-slate-500">Lấy chính xác từ tài liệu</p>
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSourceMode('creative')}
+                                                                className={`p-3 rounded-lg border-2 transition-all text-left ${sourceMode === 'creative'
+                                                                        ? 'border-purple-500 bg-purple-50 shadow-md'
+                                                                        : 'border-slate-200 hover:border-purple-300 hover:bg-purple-50/50'
+                                                                    }`}
+                                                            >
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <span className="text-lg">✨</span>
+                                                                    <span className={`text-sm font-bold ${sourceMode === 'creative' ? 'text-purple-700' : 'text-slate-700'}`}>
+                                                                        Sáng tạo
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-xs text-slate-500">Thay đổi bối cảnh, số liệu</p>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Mức độ câu hỏi */}
