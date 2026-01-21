@@ -1,6 +1,22 @@
 // Mức độ câu hỏi theo Bloom's Taxonomy
 export type DifficultyLevel = 'nhan_biet' | 'thong_hieu' | 'van_dung' | 'van_dung_cao' | 'hon_hop';
 
+// Chế độ lấy câu hỏi từ tài liệu
+export type SourceMode = 'strict' | 'creative';
+
+export const SOURCE_MODE_LABELS: Record<SourceMode, { title: string; desc: string; icon: string }> = {
+  strict: {
+    title: '📋 Nghiêm ngặt',
+    desc: 'Lấy chính xác câu hỏi từ tài liệu',
+    icon: '📋'
+  },
+  creative: {
+    title: '✨ Sáng tạo',
+    desc: 'Có thể thay đổi bối cảnh, số liệu',
+    icon: '✨'
+  }
+};
+
 // Loại giao diện game
 export type GameTheme = 'classic' | 'space' | 'quiz_show' | 'rpg' | 'racing' | 'treasure';
 
