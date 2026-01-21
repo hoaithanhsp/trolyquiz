@@ -8,7 +8,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     classic: `
         /* Theme Cơ Bản - Game Show */
         body { 
-            font-family: 'Nunito', sans-serif; 
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif; 
             background: linear-gradient(135deg, #667eea 0%, #764ba2 35%, #f093fb 60%, #f5576c 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
@@ -23,7 +23,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     space: `
         /* Theme Space Defender */
         body { 
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Inter', 'Roboto', sans-serif;
             background: #000000;
             background-image: 
                 radial-gradient(ellipse at center, #1a1a2e 0%, #000000 100%),
@@ -39,6 +39,7 @@ const THEME_CSS: Record<GameTheme, string> = {
         .btn-game { 
             background: linear-gradient(145deg, #2d1b69 0%, #11998e 100%);
             border-color: #00ffcc;
+            font-family: 'Inter', sans-serif;
         }
         .btn-game:hover { box-shadow: 0 0 30px #00ffcc; }
         /* Stars animation */
@@ -59,7 +60,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     quiz_show: `
         /* Theme Quiz Show - Ai Là Triệu Phú */
         body { 
-            font-family: 'Oswald', sans-serif;
+            font-family: 'Nunito', 'Open Sans', sans-serif;
             background: radial-gradient(ellipse at center, #312e81 0%, #1e1b4b 50%, #000000 100%);
             color: #fbbf24;
         }
@@ -74,6 +75,8 @@ const THEME_CSS: Record<GameTheme, string> = {
             background: linear-gradient(145deg, #4c1d95, #7c3aed);
             border: 2px solid #fbbf24;
             clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
         }
         .btn-game:hover {
             background: linear-gradient(145deg, #f59e0b, #fbbf24);
@@ -91,7 +94,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     rpg: `
         /* Theme RPG Adventure */
         body { 
-            font-family: 'MedievalSharp', 'Courier New', monospace;
+            font-family: 'Merriweather', 'Lora', serif;
             background: #271c19;
             background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
             color: #e7e5e4;
@@ -107,7 +110,7 @@ const THEME_CSS: Record<GameTheme, string> = {
         .btn-game {
             background: linear-gradient(145deg, #8b4513, #a0522d);
             border: 3px solid #daa520;
-            font-family: 'MedievalSharp', serif;
+            font-family: 'Merriweather', serif;
         }
         .btn-game:hover {
             background: linear-gradient(145deg, #b8860b, #daa520);
@@ -124,7 +127,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     racing: `
         /* Theme Speed Racer */
         body { 
-            font-family: 'Racing Sans One', 'Arial Black', sans-serif;
+            font-family: 'Source Sans Pro', 'Roboto', sans-serif;
             background: linear-gradient(180deg, #374151 0%, #1f2937 50%, #111827 100%);
             color: #f3f4f6;
         }
@@ -137,6 +140,8 @@ const THEME_CSS: Record<GameTheme, string> = {
         .btn-game {
             background: linear-gradient(145deg, #dc2626, #991b1b);
             border-bottom: 5px solid #7f1d1d;
+            font-family: 'Source Sans Pro', sans-serif;
+            font-weight: 700;
             font-style: italic;
             text-transform: uppercase;
         }
@@ -162,7 +167,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     treasure: `
         /* Theme Treasure Hunt */
         body { 
-            font-family: 'Pirata One', cursive, serif;
+            font-family: 'Lora', 'Merriweather', serif;
             background: linear-gradient(180deg, #0c4a6e 0%, #164e63 50%, #134e4a 100%);
             color: #fef3c7;
         }
@@ -178,7 +183,8 @@ const THEME_CSS: Record<GameTheme, string> = {
             background: linear-gradient(145deg, #f59e0b, #d97706);
             border: 3px solid #78350f;
             border-radius: 15px;
-            font-family: 'Pirata One', cursive;
+            font-family: 'Lora', serif;
+            font-weight: 600;
         }
         .btn-game:hover {
             background: linear-gradient(145deg, #fbbf24, #f59e0b);
@@ -287,7 +293,7 @@ export const getGameTemplate = (theme: GameTheme): string => {
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Orbitron:wght@400;700&family=Oswald:wght@400;600;700&family=Racing+Sans+One&family=Pirata+One&family=MedievalSharp&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Open+Sans:wght@400;600;700&family=Roboto:wght@400;500;700&family=Source+Sans+Pro:wght@400;600;700&family=Merriweather:wght@400;700&family=Lora:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         ${css}
         
