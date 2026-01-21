@@ -140,8 +140,8 @@ export const generateQuizData = async (
                     description: "Bắt buộc cho MCQ. 4 lựa chọn."
                 },
                 correct: {
-                    type: Type.NUMBER,
-                    description: "MCQ: Index (0-3). TF: 1 là Đúng, 0 là Sai. Short: Giá trị số."
+                    type: Type.STRING,
+                    description: "MCQ: Index (0-3). TF: 1 là Đúng, 0 là Sai. Short: Số hoặc phân số dạng string (VD: 5, 1/2, -3/5)."
                 },
                 explain: { type: Type.STRING },
                 level: {
@@ -284,9 +284,18 @@ export const generateQuizData = async (
     // Map data to match types strictly
     let questions = rawData.map((q: any) => {
         let cleanCorrect = q.correct;
-        if (q.type === 'tf') {
-            cleanCorrect = q.correct === 1 || q.correct === true;
+
+        if (q.type === 'mcq') {
+            // MCQ: chuyển về số index
+            cleanCorrect = typeof q.correct === 'string' ? parseInt(q.correct) : q.correct;
+        } else if (q.type === 'tf') {
+            // TF: chuyển về boolean
+            cleanCorrect = q.correct === '1' || q.correct === 1 || q.correct === true || q.correct === 'true';
+        } else if (q.type === 'short') {
+            // Short: giữ nguyên dạng string (hỗ trợ phân số)
+            cleanCorrect = String(q.correct);
         }
+
         return {
             ...q,
             correct: cleanCorrect,
