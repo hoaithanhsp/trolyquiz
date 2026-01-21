@@ -521,10 +521,15 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
             } else if (q.type === 'short') {
                 container.innerHTML = \`
                     <div class="col-span-1 md:col-span-2 flex flex-col items-center gap-4">
-                        <input type="number" id="num-input" class="w-full max-w-md p-6 text-4xl text-center font-bold text-teal-900 rounded-2xl border-4 border-teal-300 focus:border-yellow-400 outline-none shadow-xl" placeholder="?">
-                        <button onclick="handleAnswer(parseFloat(document.getElementById('num-input').value), this, 'short')" class="bg-teal-600 text-white px-10 py-4 rounded-full text-xl font-bold btn-game border-b-teal-800">KIỂM TRA</button>
+                        <input type="text" id="num-input" class="w-full max-w-md p-6 text-4xl text-center font-bold text-teal-900 rounded-2xl border-4 border-teal-300 focus:border-yellow-400 outline-none shadow-xl" placeholder="Nhập đáp án (VD: 5, 1/2, -3/5)" autocomplete="off">
+                        <p class="text-sm text-white/70 mt-1">💡 Hỗ trợ: Số nguyên, số thập phân, phân số (1/2, -3/5...)</p>
+                        <button onclick="handleShortAnswer()" class="bg-teal-600 text-white px-10 py-4 rounded-full text-xl font-bold btn-game border-b-teal-800">KIỂM TRA</button>
                     </div>
                 \`;
+                // Cho phép nhấn Enter để submit
+                document.getElementById('num-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') handleShortAnswer();
+                });
             }
 
             if (window.MathJax) {
@@ -532,12 +537,53 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
             }
         }
 
-        function handleAnswer(userAns, btnElement, type) {
+        // Hàm parse phân số và số thông thường
+        function parseFraction(str) {
+            if (!str || str.trim() === '') return NaN;
+            str = str.trim().replace(/\s+/g, '');
+            
+            // Xử lý phân số: 1/2, -3/5, 2/3...
+            if (str.includes('/')) {
+                const parts = str.split('/');
+                if (parts.length === 2) {
+                    const numerator = parseFloat(parts[0]);
+                    const denominator = parseFloat(parts[1]);
+                    if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+                        return numerator / denominator;
+                    }
+                }
+                return NaN;
+            }
+            
+            // Xử lý số thập phân hoặc số nguyên
+            return parseFloat(str);
+        }
+
+        // Xử lý câu trả lời ngắn
+        function handleShortAnswer() {
+            const input = document.getElementById('num-input');
+            const userInput = input.value;
+            const userValue = parseFraction(userInput);
+            
+            if (isNaN(userValue)) {
+                alert('Vui lòng nhập số hợp lệ!\nVí dụ: 5, 1/2, -3/5, 0.25');
+                return;
+            }
+            
+            handleAnswer(userValue, input, 'short', userInput);
+        }
+
+        function handleAnswer(userAns, btnElement, type, originalInput = '') {
             const q = quizData[currentIdx];
             let isCorrect = false;
 
             if (type === 'short') {
-                isCorrect = Math.abs(userAns - q.correct) < 0.001;
+                // Parse đáp án đúng (có thể là số hoặc phân số dạng string)
+                let correctValue = q.correct;
+                if (typeof q.correct === 'string') {
+                    correctValue = parseFraction(q.correct);
+                }
+                isCorrect = Math.abs(userAns - correctValue) < 0.0001;
             } else {
                 isCorrect = (userAns === q.correct);
             }
