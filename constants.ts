@@ -258,6 +258,12 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
                 <span id="timer-display" class="text-2xl font-game font-bold text-yellow-300 drop-shadow-md">00:00</span>
             </div>
 
+            <!-- Shuffle Button -->
+            <button onclick="shuffleQuestions()" id="shuffle-btn" class="glass-panel px-4 py-2 rounded-full flex items-center gap-2 hover:bg-white/30 transition-all cursor-pointer" title="Đảo ngẫu nhiên câu hỏi">
+                <i class="fas fa-random text-yellow-300 text-xl"></i>
+                <span class="text-teal-50 font-game text-lg hidden md:inline">Đảo câu</span>
+            </button>
+
             <!-- Score -->
             <div class="glass-panel px-6 py-2 rounded-full flex items-center gap-2">
                 <span class="text-teal-50 font-game text-2xl drop-shadow-sm">Điểm:</span>
@@ -338,7 +344,8 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
 
     <script>
         // DỮ LIỆU CÂU HỎI (AI SẼ ĐIỀN VÀO ĐÂY)
-        const quizData = // {{DATA_PLACEHOLDER}};
+        let quizData = // {{DATA_PLACEHOLDER}};
+        let originalQuizData = [...quizData]; // Lưu bản gốc
 
         // Timer & Sound Settings (injected by app)
         const TIMER_SECONDS = {{TIMER_SECONDS}};
@@ -348,10 +355,59 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
         let score = 0;
         let timerInterval = null;
         let timeLeft = TIMER_SECONDS;
+        let isShuffled = false; // Trạng thái đảo
         
         // Colors for buttons A, B, C, D
         const btnClasses = ['opt-A', 'opt-B', 'opt-C', 'opt-D'];
         const btnLabels = ['A', 'B', 'C', 'D'];
+
+        // Hàm đảo ngẫu nhiên câu hỏi (Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function shuffleQuestions() {
+            if (currentIdx > 0) {
+                if (!confirm('Đảo câu hỏi sẽ bắt đầu lại từ đầu. Bạn có muốn tiếp tục?')) {
+                    return;
+                }
+            }
+            
+            // Đảo câu hỏi
+            quizData = shuffleArray(originalQuizData);
+            isShuffled = true;
+            
+            // Reset trạng thái
+            currentIdx = 0;
+            score = 0;
+            document.getElementById('score').innerText = 0;
+            
+            // Cập nhật UI
+            const shuffleBtn = document.getElementById('shuffle-btn');
+            shuffleBtn.classList.add('bg-yellow-500/30');
+            shuffleBtn.title = 'Đã đảo ngẫu nhiên - Bấm lại để đảo mới';
+            
+            // Hiển thị thông báo
+            showToast('🔀 Đã đảo ngẫu nhiên ' + quizData.length + ' câu hỏi!');
+            
+            // Render lại câu hỏi đầu
+            renderQuestion();
+            playSound('click');
+        }
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-white text-slate-800 px-6 py-3 rounded-full shadow-2xl font-bold z-50 animate-bounce-in';
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
 
         // Sound Generator using Web Audio API
         function playSound(type) {
