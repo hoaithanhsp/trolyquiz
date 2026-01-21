@@ -23,7 +23,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     space: `
         /* Theme Space Defender */
         body { 
-            font-family: 'Inter', 'Roboto', sans-serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
             background: #000000;
             background-image: 
                 radial-gradient(ellipse at center, #1a1a2e 0%, #000000 100%),
@@ -39,7 +39,7 @@ const THEME_CSS: Record<GameTheme, string> = {
         .btn-game { 
             background: linear-gradient(145deg, #2d1b69 0%, #11998e 100%);
             border-color: #00ffcc;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
         }
         .btn-game:hover { box-shadow: 0 0 30px #00ffcc; }
         /* Stars animation */
@@ -60,7 +60,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     quiz_show: `
         /* Theme Quiz Show - Ai Là Triệu Phú */
         body { 
-            font-family: 'Nunito', 'Open Sans', sans-serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
             background: radial-gradient(ellipse at center, #312e81 0%, #1e1b4b 50%, #000000 100%);
             color: #fbbf24;
         }
@@ -75,7 +75,7 @@ const THEME_CSS: Record<GameTheme, string> = {
             background: linear-gradient(145deg, #4c1d95, #7c3aed);
             border: 2px solid #fbbf24;
             clip-path: polygon(10% 0%, 90% 0%, 100% 50%, 90% 100%, 10% 100%, 0% 50%);
-            font-family: 'Nunito', sans-serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
             font-weight: 700;
         }
         .btn-game:hover {
@@ -94,7 +94,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     rpg: `
         /* Theme RPG Adventure */
         body { 
-            font-family: 'Merriweather', 'Lora', serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
             background: #271c19;
             background-image: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
             color: #e7e5e4;
@@ -110,7 +110,7 @@ const THEME_CSS: Record<GameTheme, string> = {
         .btn-game {
             background: linear-gradient(145deg, #8b4513, #a0522d);
             border: 3px solid #daa520;
-            font-family: 'Merriweather', serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
         }
         .btn-game:hover {
             background: linear-gradient(145deg, #b8860b, #daa520);
@@ -127,7 +127,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     racing: `
         /* Theme Speed Racer */
         body { 
-            font-family: 'Source Sans Pro', 'Roboto', sans-serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
             background: linear-gradient(180deg, #374151 0%, #1f2937 50%, #111827 100%);
             color: #f3f4f6;
         }
@@ -140,7 +140,7 @@ const THEME_CSS: Record<GameTheme, string> = {
         .btn-game {
             background: linear-gradient(145deg, #dc2626, #991b1b);
             border-bottom: 5px solid #7f1d1d;
-            font-family: 'Source Sans Pro', sans-serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
             font-weight: 700;
             font-style: italic;
             text-transform: uppercase;
@@ -167,7 +167,7 @@ const THEME_CSS: Record<GameTheme, string> = {
     treasure: `
         /* Theme Treasure Hunt */
         body { 
-            font-family: 'Lora', 'Merriweather', serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
             background: linear-gradient(180deg, #0c4a6e 0%, #164e63 50%, #134e4a 100%);
             color: #fef3c7;
         }
@@ -183,7 +183,7 @@ const THEME_CSS: Record<GameTheme, string> = {
             background: linear-gradient(145deg, #f59e0b, #d97706);
             border: 3px solid #78350f;
             border-radius: 15px;
-            font-family: 'Lora', serif;
+            font-family: 'Be Vietnam Pro', 'Nunito', sans-serif;
             font-weight: 600;
         }
         .btn-game:hover {
