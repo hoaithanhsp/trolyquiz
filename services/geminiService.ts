@@ -60,8 +60,20 @@ const DIFFICULTY_INSTRUCTIONS: Record<DifficultyLevel, string> = {
     - Đảm bảo đa dạng độ khó để đánh giá toàn diện`
 };
 
-// Danh sách models theo thứ tự ưu tiên
-const MODELS = ['gemini-3-flash-preview'];
+// Danh sách models theo thứ tự ưu tiên (fallback)
+const MODELS = [
+    'gemini-3-flash-preview',   // Model mặc định
+    'gemini-3-pro-preview',     // Dự phòng 1
+    'gemini-2.5-flash'          // Dự phòng 2
+];
+
+// Số lần retry tối đa cho mỗi model
+const MAX_RETRIES = 2;
+// Delay giữa các lần retry (ms)
+const RETRY_DELAY = 2000;
+
+// Hàm delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Lấy API key từ localStorage
 const getApiKey = (): string => {
@@ -70,6 +82,39 @@ const getApiKey = (): string => {
         throw new Error('API key không tồn tại. Vui lòng cài đặt API key.');
     }
     return key;
+};
+
+// Hàm parse lỗi thân thiện
+const parseErrorMessage = (error: any): string => {
+    const message = error?.message || '';
+    const statusCode = error?.status || error?.code || '';
+
+    // Lỗi 503 - Model quá tải
+    if (statusCode === 503 || message.includes('503') || message.toLowerCase().includes('overloaded') || message.toLowerCase().includes('unavailable')) {
+        return '⚠️ Server AI đang quá tải. Đang thử lại với model khác...';
+    }
+
+    // Lỗi 429 - Rate limit
+    if (statusCode === 429 || message.includes('429') || message.toLowerCase().includes('rate limit') || message.toLowerCase().includes('quota')) {
+        return '⚠️ Đã vượt giới hạn request. Vui lòng đợi 1 phút rồi thử lại.';
+    }
+
+    // Lỗi 400 - Bad request
+    if (statusCode === 400 || message.includes('400')) {
+        return '❌ Yêu cầu không hợp lệ. Vui lòng kiểm tra nội dung đầu vào.';
+    }
+
+    // Lỗi API key
+    if (message.toLowerCase().includes('api key') || message.toLowerCase().includes('invalid') || statusCode === 401 || statusCode === 403) {
+        return '🔑 API Key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại.';
+    }
+
+    // Lỗi mạng
+    if (message.toLowerCase().includes('network') || message.toLowerCase().includes('fetch')) {
+        return '🌐 Lỗi kết nối mạng. Vui lòng kiểm tra internet.';
+    }
+
+    return message || 'Đã xảy ra lỗi không xác định.';
 };
 
 export const generateQuizData = async (
@@ -139,24 +184,80 @@ export const generateQuizData = async (
         parts.push({ text: `Hãy tạo ${count} câu hỏi ${levelLabel} về chủ đề: ${topic}` });
     }
 
-    // Gọi API trực tiếp với 1 model (giống app cũ - nhanh hơn)
+    // Gọi API với cơ chế retry và fallback models
     const apiKey = getApiKey();
     const ai = new GoogleGenAI({ apiKey });
 
-    console.log('Đang tạo câu hỏi với gemini-3-flash-preview...');
+    let lastError: any = null;
+    let rawData: any[] = [];
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: { parts },
-        config: {
-            systemInstruction,
-            responseMimeType: "application/json",
-            responseSchema: schema,
-            temperature: 0.4,
+    // Thử từng model trong danh sách
+    for (const model of MODELS) {
+        // Thử retry với mỗi model
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                console.log(`Đang tạo câu hỏi với ${model} (lần ${attempt})...`);
+
+                const response = await ai.models.generateContent({
+                    model: model,
+                    contents: { parts },
+                    config: {
+                        systemInstruction,
+                        responseMimeType: "application/json",
+                        responseSchema: schema,
+                        temperature: 0.4,
+                    }
+                });
+
+                rawData = JSON.parse(response.text || "[]");
+
+                // Nếu thành công, thoát khỏi cả 2 vòng lặp
+                if (rawData.length > 0) {
+                    console.log(`✅ Tạo thành công ${rawData.length} câu hỏi với ${model}`);
+                    // Sử dụng label để break khỏi cả 2 vòng lặp
+                    lastError = null;
+                    break;
+                }
+            } catch (error: any) {
+                lastError = error;
+                const errorMsg = parseErrorMessage(error);
+                console.warn(`❌ Lỗi với ${model} (lần ${attempt}): ${errorMsg}`);
+
+                // Nếu lỗi là API key không hợp lệ, không cần thử lại
+                if (error?.status === 401 || error?.status === 403 ||
+                    (error?.message && (error.message.includes('API key') || error.message.includes('Invalid')))) {
+                    throw new Error('🔑 API Key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại trong Cài đặt.');
+                }
+
+                // Delay trước khi thử lại
+                if (attempt < MAX_RETRIES) {
+                    console.log(`⏳ Đợi ${RETRY_DELAY / 1000}s trước khi thử lại...`);
+                    await delay(RETRY_DELAY);
+                }
+            }
         }
-    });
 
-    const rawData = JSON.parse(response.text || "[]");
+        // Nếu đã thành công, thoát khỏi vòng for models
+        if (rawData.length > 0 && lastError === null) {
+            break;
+        }
+
+        // Log chuyển model
+        const modelIndex = MODELS.indexOf(model);
+        if (modelIndex < MODELS.length - 1 && (rawData.length === 0 || lastError)) {
+            console.log(`🔄 Chuyển sang model dự phòng: ${MODELS[modelIndex + 1]}`);
+            await delay(1000); // Delay nhỏ khi chuyển model
+        }
+    }
+
+    // Nếu tất cả models đều thất bại
+    if (rawData.length === 0) {
+        if (lastError) {
+            const friendlyError = parseErrorMessage(lastError);
+            throw new Error(`Không thể tạo câu hỏi sau nhiều lần thử. ${friendlyError}\n\n💡 Mẹo: Thử lại sau vài phút hoặc sử dụng API key khác.`);
+        }
+        throw new Error('Không thể tạo câu hỏi. Vui lòng thử lại sau.');
+    }
 
     // Map data to match types strictly
     let questions = rawData.map((q: any) => {
