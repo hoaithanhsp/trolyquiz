@@ -676,10 +676,6 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
             }
         }
 
-        function playSound(type) {
-            // Placeholder for sound logic. 
-            // In a real file export, we might embed base64 small mp3s, but keeping it simple here.
-        }
 
         function shareResult() {
             alert("Đã sao chép kết quả vào bộ nhớ tạm! Hãy dán để chia sẻ.");
