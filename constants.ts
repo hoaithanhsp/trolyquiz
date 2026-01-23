@@ -466,13 +466,13 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
             } else if (q.type === 'short') {
                 container.innerHTML = \`
                     <div class="col-span-1 md:col-span-2 flex flex-col items-center gap-4">
-                        <input type="text" id="num-input" class="w-full max-w-md p-6 text-4xl text-center font-bold text-teal-900 rounded-2xl border-4 border-teal-300 focus:border-yellow-400 outline-none shadow-xl" placeholder="Nhập đáp án (VD: 5, 1/2, -3/5)" autocomplete="off">
-                        <p class="text-sm text-white/70 mt-1">💡 Hỗ trợ: Số nguyên, số thập phân, phân số (1/2, -3/5...)</p>
+                        <input type="text" id="short-input" class="w-full max-w-md p-6 text-3xl text-center font-bold text-teal-900 rounded-2xl border-4 border-teal-300 focus:border-yellow-400 outline-none shadow-xl" placeholder="Nhập đáp án..." autocomplete="off">
+                        <p class="text-sm text-white/70 mt-1">💡 Hỗ trợ: Số (5), phân số (1/3), mũ (x^2), văn bản</p>
                         <button onclick="handleShortAnswer()" class="bg-teal-600 text-white px-10 py-4 rounded-full text-xl font-bold btn-game border-b-teal-800">KIỂM TRA</button>
                     </div>
                 \`;
                 // Cho phép nhấn Enter để submit
-                document.getElementById('num-input').addEventListener('keypress', (e) => {
+                document.getElementById('short-input').addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') handleShortAnswer();
                 });
             }
@@ -480,6 +480,17 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
             if (window.MathJax) {
                  window.MathJax.typesetPromise([document.getElementById('q-text'), container]).catch(err => {});
             }
+        }
+
+        // Hàm chuẩn hóa đáp án để so sánh
+        function normalizeAnswer(str) {
+            if (str === null || str === undefined) return '';
+            str = String(str).trim().toLowerCase();
+            // Loại bỏ khoảng trắng thừa
+            str = str.replace(/\\s+/g, ' ');
+            // Chuẩn hóa dấu trừ (en-dash, em-dash thành hyphen)
+            str = str.replace(/[–—]/g, '-');
+            return str;
         }
 
         // Hàm parse phân số và số thông thường
@@ -505,31 +516,45 @@ export const HTML_TEMPLATE = `<!DOCTYPE html>
             return parseFloat(str);
         }
 
+        // Hàm so sánh đáp án (hỗ trợ số, phân số, mũ, văn bản)
+        function compareAnswer(userAnswer, correctAnswer) {
+            const userStr = normalizeAnswer(userAnswer);
+            const correctStr = normalizeAnswer(correctAnswer);
+            
+            // Nếu khớp chính xác văn bản (kể cả dạng x^2)
+            if (userStr === correctStr) return true;
+            
+            // Thử so sánh dạng số/phân số
+            const userNum = parseFraction(userAnswer);
+            const correctNum = parseFraction(String(correctAnswer));
+            
+            if (!isNaN(userNum) && !isNaN(correctNum)) {
+                return Math.abs(userNum - correctNum) < 0.0001;
+            }
+            
+            return false;
+        }
+
         // Xử lý câu trả lời ngắn
         function handleShortAnswer() {
-            const input = document.getElementById('num-input');
-            const userInput = input.value;
-            const userValue = parseFraction(userInput);
+            const input = document.getElementById('short-input');
+            const userInput = input.value.trim();
             
-            if (isNaN(userValue)) {
-                alert('Vui lòng nhập số hợp lệ!\\\\nVí dụ: 5, 1/2, -3/5, 0.25');
+            if (!userInput) {
+                alert('Vui lòng nhập đáp án!');
                 return;
             }
             
-            handleAnswer(userValue, input, 'short', userInput);
+            handleAnswer(userInput, input, 'short');
         }
 
-        function handleAnswer(userAns, btnElement, type, originalInput = '') {
+        function handleAnswer(userAns, btnElement, type) {
             const q = quizData[currentIdx];
             let isCorrect = false;
 
             if (type === 'short') {
-                // Parse đáp án đúng (có thể là số hoặc phân số dạng string)
-                let correctValue = q.correct;
-                if (typeof q.correct === 'string') {
-                    correctValue = parseFraction(q.correct);
-                }
-                isCorrect = Math.abs(userAns - correctValue) < 0.0001;
+                // So sánh đáp án hỗ trợ: số, phân số, mũ (x^2), văn bản
+                isCorrect = compareAnswer(userAns, q.correct);
             } else {
                 isCorrect = (userAns === q.correct);
             }
