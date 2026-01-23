@@ -587,9 +587,19 @@ export const getGameTemplate = (theme: GameTheme): string => {
             } else if (q.type === 'short') {
                 container.className = 'flex flex-col gap-4 max-w-md mx-auto';
                 container.innerHTML = \`
-                    <input type="number" id="num-input" class="p-4 text-3xl text-center bg-black/20 border-2 border-white/30 rounded-xl outline-none focus:border-blue-500" placeholder="Nhập số...">
-                    <button onclick="handleAnswer(parseFloat(document.getElementById('num-input').value), null, 'short')" class="btn-game bg-blue-600 hover:bg-blue-500 text-white">XÁC NHẬN</button>
+                    <input type="text" id="short-input" class="p-4 text-3xl text-center bg-black/20 border-2 border-white/30 rounded-xl outline-none focus:border-blue-500" placeholder="Nhập đáp án..." autocomplete="off">
+                    <p class="text-sm text-white/70 mt-1">💡 Hỗ trợ: Số (5), phân số (1/3), mũ (x^2), văn bản</p>
+                    <button onclick="handleShortAnswer()" class="btn-game bg-blue-600 hover:bg-blue-500 text-white">XÁC NHẬN</button>
                 \`;
+                // Cho phép nhấn Enter để submit
+                setTimeout(() => {
+                    const shortInput = document.getElementById('short-input');
+                    if (shortInput) {
+                        shortInput.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') handleShortAnswer();
+                        });
+                    }
+                }, 100);
             }
 
             if (window.MathJax) {
@@ -597,12 +607,73 @@ export const getGameTemplate = (theme: GameTheme): string => {
             }
         }
 
+        // Hàm chuẩn hóa đáp án để so sánh
+        function normalizeAnswer(str) {
+            if (str === null || str === undefined) return '';
+            str = String(str).trim().toLowerCase();
+            str = str.replace(/\\s+/g, ' ');
+            str = str.replace(/[–—]/g, '-');
+            return str;
+        }
+
+        // Hàm parse phân số và số thông thường
+        function parseFraction(str) {
+            if (!str) return NaN;
+            str = String(str).trim();
+            if (str === '') return NaN;
+            
+            if (str.indexOf('/') !== -1) {
+                const parts = str.split('/');
+                if (parts.length === 2) {
+                    const numerator = parseFloat(parts[0]);
+                    const denominator = parseFloat(parts[1]);
+                    if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+                        return numerator / denominator;
+                    }
+                }
+                return NaN;
+            }
+            
+            return parseFloat(str);
+        }
+
+        // Hàm so sánh đáp án (hỗ trợ số, phân số, mũ, văn bản)
+        function compareAnswer(userAnswer, correctAnswer) {
+            const userStr = normalizeAnswer(userAnswer);
+            const correctStr = normalizeAnswer(correctAnswer);
+            
+            if (userStr === correctStr) return true;
+            
+            const userNum = parseFraction(userAnswer);
+            const correctNum = parseFraction(String(correctAnswer));
+            
+            if (!isNaN(userNum) && !isNaN(correctNum)) {
+                return Math.abs(userNum - correctNum) < 0.0001;
+            }
+            
+            return false;
+        }
+
+        // Xử lý câu trả lời ngắn
+        function handleShortAnswer() {
+            const input = document.getElementById('short-input');
+            if (!input) return;
+            const userInput = input.value.trim();
+            
+            if (!userInput) {
+                alert('Vui lòng nhập đáp án!');
+                return;
+            }
+            
+            handleAnswer(userInput, input, 'short');
+        }
+
         function handleAnswer(userAns, btnElement, type) {
             const q = quizData[currentIdx];
             let isCorrect = false;
 
             if (type === 'short') {
-                isCorrect = Math.abs(userAns - q.correct) < 0.001;
+                isCorrect = compareAnswer(userAns, q.correct);
             } else if (type === 'tf') {
                 isCorrect = (userAns === q.correct);
             } else {
