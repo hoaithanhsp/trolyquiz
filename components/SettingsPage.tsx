@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Key, Cpu, Clock, Volume2, Award, Save, ExternalLink } from 'lucide-react';
 import { AppSettings, DifficultyLevel, DIFFICULTY_LABELS } from '../types';
+import { DEFAULT_GEMINI_MODEL, GOOGLE_AI_API_KEY_HINT } from '../services/googleAiConfig';
 
 interface SettingsPageProps {
     settings: AppSettings;
     apiKey: string;
     onSaveSettings: (settings: AppSettings) => void;
-    onSaveApiKey: (key: string) => void;
+    onSaveApiKey: (key: string) => boolean;
 }
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSettings, onSaveApiKey }) => {
@@ -15,15 +16,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
     const [showApiKey, setShowApiKey] = useState(false);
 
     const handleSave = () => {
+        if (!onSaveApiKey(localApiKey)) {
+            return;
+        }
+
         onSaveSettings(localSettings);
-        onSaveApiKey(localApiKey);
         alert('Đã lưu cài đặt thành công!');
     };
 
     const availableModels = [
-        { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash Preview', desc: 'Model mặc định - Nhanh, hiệu quả', isDefault: true },
-        { id: 'gemini-3-pro-preview', name: 'Gemini 3 Pro Preview', desc: 'Model dự phòng - Chất lượng cao', isDefault: false },
-        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Model dự phòng #2 - Ổn định', isDefault: false }
+        { id: DEFAULT_GEMINI_MODEL, name: 'Gemini 3.5 Flash', desc: 'Model ổn định mới - Thông minh, nhanh', isDefault: true },
+        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Dự phòng ổn định - Giá/hiệu năng tốt', isDefault: false },
+        { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite', desc: 'Dự phòng nhẹ - Nhanh, tiết kiệm quota', isDefault: false },
+        { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', desc: 'Dự phòng chất lượng cao cho nội dung khó', isDefault: false }
     ];
 
     return (
@@ -56,7 +61,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
                                     type={showApiKey ? 'text' : 'password'}
                                     value={localApiKey}
                                     onChange={(e) => setLocalApiKey(e.target.value)}
-                                    placeholder="Nhập API key của bạn..."
+                                    placeholder={GOOGLE_AI_API_KEY_HINT}
                                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all font-mono text-sm"
                                 />
                                 <button
@@ -89,7 +94,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
                                     📺 Xem video hướng dẫn chi tiết
                                 </a>
                             </div>
-                            <p className="text-xs text-amber-700">⚠️ Nếu hết quota, hãy tạo API key mới hoặc đợi quota được reset</p>
+                            <p className="text-xs text-amber-700">⚠️ Hỗ trợ Google AI key bắt đầu bằng AIzaSy hoặc AQ. Khi model tạm quá tải, app sẽ thử model dự phòng.</p>
                         </div>
                     </div>
                 </div>
@@ -138,7 +143,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
                             ))}
                             <div className="bg-slate-50 p-3 rounded-lg mt-2">
                                 <p className="text-xs text-slate-600">
-                                    💡 <strong>Cơ chế Fallback:</strong> Nếu model hiện tại gặp lỗi hoặc hết quota, hệ thống sẽ tự động chuyển sang model dự phòng theo thứ tự trên.
+                                    💡 <strong>Cơ chế Fallback:</strong> Model đã chọn sẽ được thử trước. Nếu gặp 503/UNAVAILABLE hoặc quá tải tạm thời, hệ thống sẽ tự động chuyển sang model dự phòng theo thứ tự trên.
                                 </p>
                             </div>
                         </div>

@@ -1,8 +1,25 @@
 import { SavedQuiz, QuizQuestion, QuizSettings, DifficultyLevel, QuizHistory, AppSettings, AnalyticsData } from '../types';
+import { DEFAULT_GEMINI_MODEL, isSupportedGeminiModel } from './googleAiConfig';
 
 const STORAGE_KEY = 'quizgen_library';
 const HISTORY_KEY = 'quizgen_history';
 const SETTINGS_KEY = 'quizgen_settings';
+
+const DEFAULT_SETTINGS: AppSettings = {
+    defaultModel: DEFAULT_GEMINI_MODEL,
+    defaultTimer: 0,
+    defaultSound: true,
+    defaultDifficulty: 'hon_hop'
+};
+
+const normalizeSettings = (settings: Partial<AppSettings>): AppSettings => {
+    return {
+        defaultModel: isSupportedGeminiModel(settings.defaultModel) ? settings.defaultModel! : DEFAULT_GEMINI_MODEL,
+        defaultTimer: typeof settings.defaultTimer === 'number' ? settings.defaultTimer : DEFAULT_SETTINGS.defaultTimer,
+        defaultSound: typeof settings.defaultSound === 'boolean' ? settings.defaultSound : DEFAULT_SETTINGS.defaultSound,
+        defaultDifficulty: settings.defaultDifficulty || DEFAULT_SETTINGS.defaultDifficulty
+    };
+};
 
 // Lấy tất cả quiz đã lưu
 export const getQuizzes = (): SavedQuiz[] => {
@@ -141,22 +158,12 @@ export const getSettings = (): AppSettings => {
         const data = localStorage.getItem(SETTINGS_KEY);
         if (!data) {
             // Cài đặt mặc định
-            return {
-                defaultModel: 'gemini-2.0-flash-exp',
-                defaultTimer: 0,
-                defaultSound: true,
-                defaultDifficulty: 'hon_hop'
-            };
+            return DEFAULT_SETTINGS;
         }
-        return JSON.parse(data);
+        return normalizeSettings(JSON.parse(data));
     } catch (error) {
         console.error('Error reading settings:', error);
-        return {
-            defaultModel: 'gemini-2.0-flash-exp',
-            defaultTimer: 0,
-            defaultSound: true,
-            defaultDifficulty: 'hon_hop'
-        };
+        return DEFAULT_SETTINGS;
     }
 };
 

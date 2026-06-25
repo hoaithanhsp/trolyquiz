@@ -24,6 +24,7 @@ import { generateQuizData } from './services/geminiService';
 import { QuizQuestion, GenerationStatus, DifficultyLevel, DIFFICULTY_LABELS, SavedQuiz, PageType, AppSettings, AnalyticsData, GameTheme, GAME_THEME_LABELS, SourceMode, SOURCE_MODE_LABELS } from './types';
 import { HTML_TEMPLATE, EXPORT_FILENAME } from './constants';
 import { getGameTemplate } from './services/gameTemplates';
+import { GOOGLE_AI_API_KEY_HINT, isValidGoogleAiApiKey } from './services/googleAiConfig';
 import QuizPreview from './components/QuizPreview';
 import LibraryPage from './components/LibraryPage';
 import ReportsPage from './components/ReportsPage';
@@ -76,10 +77,14 @@ const App: React.FC = () => {
         setEnableSound(settings.defaultSound);
 
         // Check API key
-        const savedKey = localStorage.getItem('gemini_api_key');
-        if (savedKey) {
+        const savedKey = localStorage.getItem('gemini_api_key')?.trim();
+        if (savedKey && isValidGoogleAiApiKey(savedKey)) {
             setApiKey(savedKey);
+            localStorage.setItem('gemini_api_key', savedKey);
         } else {
+            if (savedKey) {
+                localStorage.removeItem('gemini_api_key');
+            }
             setShowApiKeyModal(true); // Hiển thị modal bắt buộc nhập key
         }
     }, []);
@@ -113,7 +118,7 @@ const App: React.FC = () => {
         setQuestions([]);
 
         try {
-            const data = await generateQuizData(topic, files, questionCount, difficultyLevel, sourceMode);
+            const data = await generateQuizData(topic, files, questionCount, difficultyLevel, sourceMode, appSettings.defaultModel);
             setQuestions(data);
             setStatus('success');
 
@@ -187,9 +192,22 @@ const App: React.FC = () => {
         setEnableSound(settings.defaultSound);
     };
 
-    const handleSaveApiKey = (key: string) => {
-        localStorage.setItem('gemini_api_key', key.trim());
-        setApiKey(key.trim());
+    const handleSaveApiKey = (key: string): boolean => {
+        const normalizedKey = key.trim();
+
+        if (!normalizedKey) {
+            alert('❌ Vui lòng nhập API Key!');
+            return false;
+        }
+
+        if (!isValidGoogleAiApiKey(normalizedKey)) {
+            alert(`❌ API Key chưa đúng định dạng. Vui lòng dùng key bắt đầu bằng ${GOOGLE_AI_API_KEY_HINT}.`);
+            return false;
+        }
+
+        localStorage.setItem('gemini_api_key', normalizedKey);
+        setApiKey(normalizedKey);
+        return true;
     };
 
     return (
@@ -736,7 +754,7 @@ const App: React.FC = () => {
                         {/* Header */}
                         <div className="bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-5 text-white">
                             <h3 className="text-2xl font-bold">🔑 Cài Đặt API Key</h3>
-                            <p className="text-blue-100 text-sm mt-1">Nhập Google Gemini API Key để sử dụng ứng dụng</p>
+                            <p className="text-blue-100 text-sm mt-1">Nhập Google Gemini API Key dạng AIzaSy hoặc AQ</p>
                         </div>
 
                         <div className="p-6 space-y-5">
@@ -747,7 +765,7 @@ const App: React.FC = () => {
                                     type="password"
                                     value={apiKey}
                                     onChange={(e) => setApiKey(e.target.value)}
-                                    placeholder="Nhập API key tại đây..."
+                                    placeholder={GOOGLE_AI_API_KEY_HINT}
                                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 outline-none transition-all font-mono text-sm"
                                     autoFocus
                                 />
@@ -776,7 +794,7 @@ const App: React.FC = () => {
                                         Xem video hướng dẫn chi tiết
                                     </a>
                                 </div>
-                                <p className="text-xs text-amber-700">⚠️ API Key miễn phí, nhưng có giới hạn quota (hết quota sẽ tự động chuyển model dự phòng)</p>
+                                <p className="text-xs text-amber-700">⚠️ Khi model tạm quá tải, hệ thống sẽ tự động thử model dự phòng trước khi báo lỗi.</p>
                             </div>
 
                             {/* Buttons */}
@@ -791,12 +809,9 @@ const App: React.FC = () => {
                                 )}
                                 <button
                                     onClick={() => {
-                                        if (apiKey.trim()) {
-                                            localStorage.setItem('gemini_api_key', apiKey.trim());
+                                        if (handleSaveApiKey(apiKey)) {
                                             setShowApiKeyModal(false);
                                             alert('✅ Đã lưu API Key thành công!');
-                                        } else {
-                                            alert('❌ Vui lòng nhập API Key!');
                                         }
                                     }}
                                     className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30"

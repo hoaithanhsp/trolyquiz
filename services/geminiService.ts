@@ -1,5 +1,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { QuizQuestion, DifficultyLevel, DIFFICULTY_LABELS, SourceMode } from '../types';
+import {
+    DEFAULT_GEMINI_MODEL,
+    GOOGLE_AI_API_KEY_HINT,
+    getOrderedGeminiModels,
+    isValidGoogleAiApiKey
+} from './googleAiConfig';
 
 const fileToPart = (file: File): Promise<any> => {
     return new Promise((resolve, reject) => {
@@ -60,13 +66,6 @@ const DIFFICULTY_INSTRUCTIONS: Record<DifficultyLevel, string> = {
     - Đảm bảo đa dạng độ khó để đánh giá toàn diện`
 };
 
-// Danh sách models theo thứ tự ưu tiên (fallback)
-const MODELS = [
-    'gemini-3-flash-preview',   // Model mặc định
-    'gemini-3-pro-preview',     // Dự phòng 1
-    'gemini-2.5-flash'          // Dự phòng 2
-];
-
 // Số lần retry tối đa cho mỗi model
 const MAX_RETRIES = 2;
 // Delay giữa các lần retry (ms)
@@ -77,40 +76,97 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Lấy API key từ localStorage
 const getApiKey = (): string => {
-    const key = localStorage.getItem('gemini_api_key');
+    const key = localStorage.getItem('gemini_api_key')?.trim();
     if (!key) {
         throw new Error('API key không tồn tại. Vui lòng cài đặt API key.');
     }
+
+    if (!isValidGoogleAiApiKey(key)) {
+        throw new Error(`API Key chưa đúng định dạng. Vui lòng dùng key bắt đầu bằng ${GOOGLE_AI_API_KEY_HINT}.`);
+    }
+
     return key;
+};
+
+type GeminiApiErrorType = 'MODEL_OVERLOADED' | 'QUOTA_EXCEEDED' | 'INVALID_API_KEY' | 'BAD_REQUEST' | 'NETWORK' | 'UNKNOWN';
+
+const stringifyError = (error: any): string => {
+    try {
+        return JSON.stringify(error) || '';
+    } catch {
+        return '';
+    }
+};
+
+const getGeminiApiErrorType = (error: any): GeminiApiErrorType => {
+    const message = error?.message || error?.toString?.() || '';
+    const statusCode = String(error?.status || error?.code || '');
+    const combined = `${statusCode} ${message} ${stringifyError(error)}`.toLowerCase();
+
+    if (
+        combined.includes('429') ||
+        combined.includes('resource_exhausted') ||
+        combined.includes('rate limit') ||
+        combined.includes('quota') ||
+        combined.includes('too many requests')
+    ) {
+        return 'QUOTA_EXCEEDED';
+    }
+
+    if (
+        combined.includes('503') ||
+        combined.includes('unavailable') ||
+        combined.includes('high demand') ||
+        combined.includes('overloaded') ||
+        combined.includes('try again later')
+    ) {
+        return 'MODEL_OVERLOADED';
+    }
+
+    if (
+        combined.includes('401') ||
+        combined.includes('403') ||
+        combined.includes('api_key_invalid') ||
+        combined.includes('permission_denied') ||
+        combined.includes('api key not valid') ||
+        combined.includes('invalid api key')
+    ) {
+        return 'INVALID_API_KEY';
+    }
+
+    if (combined.includes('400')) {
+        return 'BAD_REQUEST';
+    }
+
+    if (combined.includes('network') || combined.includes('fetch')) {
+        return 'NETWORK';
+    }
+
+    return 'UNKNOWN';
 };
 
 // Hàm parse lỗi thân thiện
 const parseErrorMessage = (error: any): string => {
     const message = error?.message || '';
-    const statusCode = error?.status || error?.code || '';
+    const errorType = getGeminiApiErrorType(error);
 
-    // Lỗi 503 - Model quá tải
-    if (statusCode === 503 || message.includes('503') || message.toLowerCase().includes('overloaded') || message.toLowerCase().includes('unavailable')) {
-        return '⚠️ Server AI đang quá tải. Đang thử lại với model khác...';
+    if (errorType === 'MODEL_OVERLOADED') {
+        return '⚠️ Model AI đang tạm quá tải. Hệ thống sẽ thử model dự phòng hoặc bạn có thể thử lại sau vài phút.';
     }
 
-    // Lỗi 429 - Rate limit
-    if (statusCode === 429 || message.includes('429') || message.toLowerCase().includes('rate limit') || message.toLowerCase().includes('quota')) {
+    if (errorType === 'QUOTA_EXCEEDED') {
         return '⚠️ Đã vượt giới hạn request. Vui lòng đợi 1 phút rồi thử lại.';
     }
 
-    // Lỗi 400 - Bad request
-    if (statusCode === 400 || message.includes('400')) {
+    if (errorType === 'BAD_REQUEST') {
         return '❌ Yêu cầu không hợp lệ. Vui lòng kiểm tra nội dung đầu vào.';
     }
 
-    // Lỗi API key
-    if (message.toLowerCase().includes('api key') || message.toLowerCase().includes('invalid') || statusCode === 401 || statusCode === 403) {
+    if (errorType === 'INVALID_API_KEY') {
         return '🔑 API Key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại.';
     }
 
-    // Lỗi mạng
-    if (message.toLowerCase().includes('network') || message.toLowerCase().includes('fetch')) {
+    if (errorType === 'NETWORK') {
         return '🌐 Lỗi kết nối mạng. Vui lòng kiểm tra internet.';
     }
 
@@ -122,7 +178,8 @@ export const generateQuizData = async (
     files: File[],
     count: number,
     difficultyLevel: DifficultyLevel = 'hon_hop',
-    sourceMode: SourceMode = 'creative'
+    sourceMode: SourceMode = 'creative',
+    selectedModel: string = DEFAULT_GEMINI_MODEL
 ): Promise<QuizQuestion[]> => {
     // Schema definition for strict JSON output
     const schema = {
@@ -209,12 +266,13 @@ export const generateQuizData = async (
     // Gọi API với cơ chế retry và fallback models
     const apiKey = getApiKey();
     const ai = new GoogleGenAI({ apiKey });
+    const models = getOrderedGeminiModels(selectedModel);
 
     let lastError: any = null;
     let rawData: any[] = [];
 
     // Thử từng model trong danh sách
-    for (const model of MODELS) {
+    for (const model of models) {
         // Thử retry với mỗi model
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
@@ -242,12 +300,12 @@ export const generateQuizData = async (
                 }
             } catch (error: any) {
                 lastError = error;
+                const errorType = getGeminiApiErrorType(error);
                 const errorMsg = parseErrorMessage(error);
                 console.warn(`❌ Lỗi với ${model} (lần ${attempt}): ${errorMsg}`);
 
                 // Nếu lỗi là API key không hợp lệ, không cần thử lại
-                if (error?.status === 401 || error?.status === 403 ||
-                    (error?.message && (error.message.includes('API key') || error.message.includes('Invalid')))) {
+                if (errorType === 'INVALID_API_KEY') {
                     throw new Error('🔑 API Key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại trong Cài đặt.');
                 }
 
@@ -265,9 +323,9 @@ export const generateQuizData = async (
         }
 
         // Log chuyển model
-        const modelIndex = MODELS.indexOf(model);
-        if (modelIndex < MODELS.length - 1 && (rawData.length === 0 || lastError)) {
-            console.log(`🔄 Chuyển sang model dự phòng: ${MODELS[modelIndex + 1]}`);
+        const modelIndex = models.indexOf(model);
+        if (modelIndex < models.length - 1 && (rawData.length === 0 || lastError)) {
+            console.log(`🔄 Chuyển sang model dự phòng: ${models[modelIndex + 1]}`);
             await delay(1000); // Delay nhỏ khi chuyển model
         }
     }
@@ -276,7 +334,7 @@ export const generateQuizData = async (
     if (rawData.length === 0) {
         if (lastError) {
             const friendlyError = parseErrorMessage(lastError);
-            throw new Error(`Không thể tạo câu hỏi sau nhiều lần thử. ${friendlyError}\n\n💡 Mẹo: Thử lại sau vài phút hoặc sử dụng API key khác.`);
+            throw new Error(`Không thể tạo câu hỏi sau nhiều lần thử. ${friendlyError}\n\n💡 Mẹo: Thử lại sau vài phút hoặc chọn model nhẹ hơn trong Cài đặt.`);
         }
         throw new Error('Không thể tạo câu hỏi. Vui lòng thử lại sau.');
     }
