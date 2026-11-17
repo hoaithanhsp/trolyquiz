@@ -19,7 +19,7 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ savedQuizzes, onDelete, onRel
     const handleDownloadQuiz = (quiz: SavedQuiz) => {
         const jsonString = JSON.stringify(quiz.questions);
         let finalHtml = HTML_TEMPLATE
-            .replace('// {{DATA_PLACEHOLDER}}', jsonString)
+            .replace('{{DATA_PLACEHOLDER}}', jsonString)
             .replace('{{TIMER_SECONDS}}', String(quiz.settings.timerSeconds))
             .replace('{{ENABLE_SOUND}}', String(quiz.settings.enableSound));
 
@@ -87,7 +87,6 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ savedQuizzes, onDelete, onRel
                             key={quiz.id}
                             className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden group"
                         >
-                            {/* Quiz Header */}
                             <div className="bg-gradient-to-br from-teal-50 to-cyan-50 p-4 border-b border-slate-100">
                                 <div className="flex items-start justify-between mb-2">
                                     <div className="bg-primary/10 px-2 py-1 rounded-md">
@@ -106,7 +105,6 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ savedQuizzes, onDelete, onRel
                                 <p className="text-sm text-slate-600 line-clamp-1">{quiz.topic}</p>
                             </div>
 
-                            {/* Quiz Stats */}
                             <div className="p-4 space-y-3">
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                     <div className="bg-slate-50 rounded-lg p-2">
@@ -123,7 +121,6 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ savedQuizzes, onDelete, onRel
                                     </div>
                                 </div>
 
-                                {/* Actions */}
                                 <div className="flex gap-2 pt-2">
                                     <button
                                         onClick={() => {
@@ -159,7 +156,6 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ savedQuizzes, onDelete, onRel
                 </div>
             )}
 
-            {/* Preview Modal */}
             {showPreview && selectedQuiz && (
                 <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
@@ -168,15 +164,27 @@ const LibraryPage: React.FC<LibraryPageProps> = ({ savedQuizzes, onDelete, onRel
                                 <h3 className="text-2xl font-bold text-slate-900">{selectedQuiz.name}</h3>
                                 <p className="text-sm text-slate-500">{selectedQuiz.topic}</p>
                             </div>
-                            <button
-                                onClick={() => {
-                                    setShowPreview(false);
-                                    setSelectedQuiz(null);
-                                }}
-                                className="text-slate-400 hover:text-slate-600 text-2xl font-bold"
-                            >
-                                ×
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => {
+                                        onReload(selectedQuiz);
+                                        setShowPreview(false);
+                                        setSelectedQuiz(null);
+                                    }}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm"
+                                >
+                                    Tải lại
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowPreview(false);
+                                        setSelectedQuiz(null);
+                                    }}
+                                    className="text-slate-400 hover:text-slate-600 text-2xl font-bold"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         </div>
                         <div className="overflow-y-auto max-h-[calc(90vh-100px)]">
                             <QuizPreview questions={selectedQuiz.questions} />
