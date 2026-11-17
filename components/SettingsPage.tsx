@@ -25,10 +25,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
     };
 
     const availableModels = [
-        { id: DEFAULT_GEMINI_MODEL, name: 'Gemini 3.5 Flash', desc: 'Model ổn định mới - Thông minh, nhanh', isDefault: true },
-        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Dự phòng ổn định - Giá/hiệu năng tốt', isDefault: false },
-        { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash-Lite', desc: 'Dự phòng nhẹ - Nhanh, tiết kiệm quota', isDefault: false },
-        { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', desc: 'Dự phòng chất lượng cao cho nội dung khó', isDefault: false }
+        { id: DEFAULT_GEMINI_MODEL, name: 'Gemini 3.8 Flash', desc: 'Model mặc định mới - Thông minh, nhanh', isDefault: true },
+        { id: 'gemini-3.7-flash', name: 'Gemini 3.7 Flash', desc: 'Dự phòng ổn định', isDefault: false },
+        { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash-Lite', desc: 'Nhẹ, tiết kiệm quota', isDefault: false },
+        { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash', desc: 'Dự phòng cân bằng', isDefault: false },
+        { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', desc: 'Dự phòng chất lượng tốt', isDefault: false },
+        { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash-Lite', desc: 'Model nhẹ khi hệ thống bận', isDefault: false },
+        { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Dự phòng cuối cùng', isDefault: false }
     ];
 
     return (
@@ -143,7 +146,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ settings, apiKey, onSaveSet
                             ))}
                             <div className="bg-slate-50 p-3 rounded-lg mt-2">
                                 <p className="text-xs text-slate-600">
-                                    💡 <strong>Cơ chế Fallback:</strong> Model đã chọn sẽ được thử trước. Nếu gặp 503/UNAVAILABLE hoặc quá tải tạm thời, hệ thống sẽ tự động chuyển sang model dự phòng theo thứ tự trên.
+                                    💡 <strong>Cơ chế Fallback:</strong> Model đã chọn sẽ được thử trước. Nếu gặp 502/503/504 hoặc quá tải tạm thời, hệ thống sẽ tự động chuyển sang model dự phòng theo thứ tự trên.
                                 </p>
                             </div>
                         </div>

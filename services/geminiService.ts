@@ -114,7 +114,11 @@ const getGeminiApiErrorType = (error: any): GeminiApiErrorType => {
     }
 
     if (
+        combined.includes('502') ||
         combined.includes('503') ||
+        combined.includes('504') ||
+        combined.includes('bad gateway') ||
+        combined.includes('gateway timeout') ||
         combined.includes('unavailable') ||
         combined.includes('high demand') ||
         combined.includes('overloaded') ||
@@ -171,6 +175,29 @@ const parseErrorMessage = (error: any): string => {
     }
 
     return message || 'Đã xảy ra lỗi không xác định.';
+};
+
+const getModelConfig = (model: string) => {
+    const isGemini3Model = model.startsWith('gemini-3');
+    if (isGemini3Model) {
+        return {
+            thinkingConfig: { thinkingLevel: 'low' as const },
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: undefined,
+            }
+        };
+    }
+
+    return {
+        config: {
+            responseMimeType: 'application/json',
+            responseSchema: undefined,
+            temperature: 0.4,
+            topP: 0.95,
+            topK: 40,
+        }
+    };
 };
 
 export const generateQuizData = async (
@@ -263,7 +290,6 @@ export const generateQuizData = async (
         parts.push({ text: `Hãy tạo ${count} câu hỏi ${levelLabel} về chủ đề: ${topic}` });
     }
 
-    // Gọi API với cơ chế retry và fallback models
     const apiKey = getApiKey();
     const ai = new GoogleGenAI({ apiKey });
     const models = getOrderedGeminiModels(selectedModel);
@@ -271,30 +297,24 @@ export const generateQuizData = async (
     let lastError: any = null;
     let rawData: any[] = [];
 
-    // Thử từng model trong danh sách
     for (const model of models) {
-        // Thử retry với mỗi model
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
-                console.log(`Đang tạo câu hỏi với ${model} (lần ${attempt})...`);
-
+                const modelConfig = getModelConfig(model);
                 const response = await ai.models.generateContent({
-                    model: model,
+                    model,
                     contents: { parts },
                     config: {
+                        ...modelConfig.config,
                         systemInstruction,
-                        responseMimeType: "application/json",
                         responseSchema: schema,
-                        temperature: 0.4,
+                        ...(model.startsWith('gemini-3') ? { thinkingConfig: { thinkingLevel: 'low' as const } } : {}),
                     }
                 });
 
                 rawData = JSON.parse(response.text || "[]");
 
-                // Nếu thành công, thoát khỏi cả 2 vòng lặp
                 if (rawData.length > 0) {
-                    console.log(`✅ Tạo thành công ${rawData.length} câu hỏi với ${model}`);
-                    // Sử dụng label để break khỏi cả 2 vòng lặp
                     lastError = null;
                     break;
                 }
@@ -302,35 +322,34 @@ export const generateQuizData = async (
                 lastError = error;
                 const errorType = getGeminiApiErrorType(error);
                 const errorMsg = parseErrorMessage(error);
-                console.warn(`❌ Lỗi với ${model} (lần ${attempt}): ${errorMsg}`);
+                console.warn(`❌ Lỗi với model AI: ${errorMsg}`);
 
-                // Nếu lỗi là API key không hợp lệ, không cần thử lại
                 if (errorType === 'INVALID_API_KEY') {
                     throw new Error('🔑 API Key không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại trong Cài đặt.');
                 }
 
-                // Delay trước khi thử lại
-                if (attempt < MAX_RETRIES) {
-                    console.log(`⏳ Đợi ${RETRY_DELAY / 1000}s trước khi thử lại...`);
+                if (errorType === 'QUOTA_EXCEEDED') {
+                    throw new Error('⚠️ API Key đang bị giới hạn tạm thời. Vui lòng đợi 1 phút rồi thử lại.');
+                }
+
+                if (attempt < MAX_RETRIES && errorType !== 'BAD_REQUEST') {
                     await delay(RETRY_DELAY);
                 }
             }
         }
 
-        // Nếu đã thành công, thoát khỏi vòng for models
         if (rawData.length > 0 && lastError === null) {
             break;
         }
 
-        // Log chuyển model
-        const modelIndex = models.indexOf(model);
-        if (modelIndex < models.length - 1 && (rawData.length === 0 || lastError)) {
-            console.log(`🔄 Chuyển sang model dự phòng: ${models[modelIndex + 1]}`);
-            await delay(1000); // Delay nhỏ khi chuyển model
+        if (rawData.length === 0 && lastError) {
+            const errorType = getGeminiApiErrorType(lastError);
+            if (errorType !== 'BAD_REQUEST' && errorType !== 'INVALID_API_KEY' && errorType !== 'QUOTA_EXCEEDED') {
+                await delay(1000);
+            }
         }
     }
 
-    // Nếu tất cả models đều thất bại
     if (rawData.length === 0) {
         if (lastError) {
             const friendlyError = parseErrorMessage(lastError);
@@ -339,18 +358,14 @@ export const generateQuizData = async (
         throw new Error('Không thể tạo câu hỏi. Vui lòng thử lại sau.');
     }
 
-    // Map data to match types strictly
     let questions = rawData.map((q: any) => {
         let cleanCorrect = q.correct;
 
         if (q.type === 'mcq') {
-            // MCQ: chuyển về số index
             cleanCorrect = typeof q.correct === 'string' ? parseInt(q.correct) : q.correct;
         } else if (q.type === 'tf') {
-            // TF: chuyển về boolean
             cleanCorrect = q.correct === '1' || q.correct === 1 || q.correct === true || q.correct === 'true';
         } else if (q.type === 'short') {
-            // Short: giữ nguyên dạng string (hỗ trợ phân số)
             cleanCorrect = String(q.correct);
         }
 
@@ -361,14 +376,13 @@ export const generateQuizData = async (
         };
     });
 
-    // Nếu là mức độ hỗn hợp, sắp xếp theo thứ tự tăng dần
     if (difficultyLevel === 'hon_hop') {
         const levelOrder: Record<DifficultyLevel, number> = {
             nhan_biet: 1,
             thong_hieu: 2,
             van_dung: 3,
             van_dung_cao: 4,
-            hon_hop: 0 // không dùng trong sort
+            hon_hop: 0
         };
 
         questions.sort((a, b) => {
